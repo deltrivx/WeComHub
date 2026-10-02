@@ -1,0 +1,16 @@
+# 本地构建产物：严禁上传，必须由 GitHub Actions 云端构建
+dist/
+*.txz
+*.plg.bak
+__pycache__/
+*.pyc
+
+# 编辑器/系统
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# 本地覆盖配置（含真实凭据，不得提交）
+*.local.cfg
+.env

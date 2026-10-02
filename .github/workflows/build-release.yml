@@ -1,0 +1,69 @@
+name: Build Release
+
+# 云端构建：推送 v* tag 时，由 GitHub Actions 构建 plg + txz 并挂到 Release 附件。
+# 约束：禁止本地构建后上传，产物一律由本 workflow 生成。
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: '要构建的 ref（默认当前分支）'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build plugin archives
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VER="${{ github.event.inputs.ref }}"
+          else
+            VER="${GITHUB_REF#refs/tags/}"
+          fi
+          VER="${VER#v}"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "构建版本: $VER"
+
+      - name: Build release artifacts
+        run: |
+          chmod +x scripts/build-release.sh
+          ./scripts/build-release.sh "${{ steps.ver.outputs.version }}"
+
+      - name: Verify artifacts
+        run: |
+          chmod +x scripts/verify-release.sh
+          ./scripts/verify-release.sh "${{ steps.ver.outputs.version }}"
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.ver.outputs.version }}"
+          # 幂等：Release 已存在则复用
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --title "WeComHub $TAG" \
+              --notes-file RELEASES.md
+          fi
+          gh release upload "$TAG" dist/*.plg dist/*.txz --clobber
+
+      - name: Upload build artifacts (for inspection)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wecomhub-${{ steps.ver.outputs.version }}
+          path: dist/

@@ -1,0 +1,59 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN [
+<!ENTITY name "WeComHub">
+<!ENTITY author "deltrivx">
+<!ENTITY version "{VERSION}">
+<!ENTITY launch "Settings/Notification">
+<!ENTITY branch "main">
+<!ENTITY gitURL "https://github.com/deltrivx/WeComHub/raw/&branch;/">
+<!ENTITY pluginURL "https://github.com/deltrivx/WeComHub">
+<!ENTITY supportURL "https://github.com/deltrivx/WeComHub/issues">
+]>
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;"
+        pluginURL="&pluginURL;" supportURL="&supportURL;" min="6.9.0" beta="false">
+
+  <!-- WeComHub：Unraid 企业微信中枢
+       设置 → 通知 可视化配置；系统通知推送企微 + 企微指令反向交互。
+       所有归档由 GitHub Actions 云端构建，禁止本地打包后上传。 -->
+
+  <CHANGES>
+### {VERSION}
+- 设置 → 通知 UI 配置入口
+- 系统通知经中转转发至企业微信
+- 内置本地指令服务，接收企微反向调用
+- 不再依赖 /boot/config/go 兜底
+  </CHANGES>
+
+  <FILE Name="/usr/local/emhttp/plugins/&name;/&name;.page" Mode="0755">
+    <URL>&gitURL;&name;.page</URL>
+    <MD5>{MD5_PAGE}</MD5>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/assets/&name;.css" Mode="0644">
+    <URL>&gitURL;assets/&name;.css</URL>
+    <MD5>{MD5_CSS}</MD5>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/assets/&name;.js" Mode="0644">
+    <URL>&gitURL;assets/&name;.js</URL>
+    <MD5>{MD5_JS}</MD5>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/wecom-hub-save.php" Mode="0755">
+    <URL>&gitURL;wecom-hub-save.php</URL>
+    <MD5>{MD5_SAVE}</MD5>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/wecom-hub-notify-agent.sh" Mode="0755">
+    <URL>&gitURL;wecom-hub-notify-agent.sh</URL>
+    <MD5>{MD5_AGENT}</MD5>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/wecom-hub-cmd.py" Mode="0755">
+    <URL>&gitURL;wecom-hub-cmd.py</URL>
+    <MD5>{MD5_CMD}</MD5>
+  </FILE>
+  <FILE Name="/etc/rc.d/rc.&name;" Mode="0755">
+    <URL>&gitURL;scripts/rc.&name;</URL>
+    <MD5>{MD5_RC}</MD5>
+  </FILE>
+  <FILE Name="/boot/config/plugins/dynamix/notifications/agents/&name;.sh" Mode="0755">
+    <URL>&gitURL;scripts/notify-agent.sh</URL>
+    <MD5>{MD5_AGENTSH}</MD5>
+  </FILE>
+</PLUGIN>

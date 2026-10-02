@@ -1,0 +1,54 @@
+name: Verify
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  verify:
+    name: Static verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax check
+        run: |
+          find . -name '*.sh' -not -path './.git/*' | while read -r f; do
+            bash -n "$f" && echo "OK  $f" || { echo "FAIL $f"; exit 1; }
+          done
+
+      - name: PHP lint
+        run: |
+          if command -v php >/dev/null 2>&1; then
+            find . -name '*.php' -not -path './.git/*' | while read -r f; do
+              php -l "$f" >/dev/null && echo "OK  $f" || { echo "FAIL $f"; exit 1; }
+            done
+          else
+            echo "php not installed, skip"
+          fi
+
+      - name: XML well-formedness
+        run: |
+          python3 - <<'PY'
+          import glob, sys, xml.etree.ElementTree as ET
+          bad = []
+          for f in glob.glob('**/*.xml', recursive=True) + glob.glob('**/*.plg', recursive=True):
+              if '/.git/' in f: continue
+              try:
+                  ET.parse(f); print('OK ', f)
+              except Exception as e:
+                  bad.append((f, str(e))); print('FAIL', f, e)
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: No real secrets committed
+        run: |
+          # 仓库不得包含真实凭据：只应出现占位符
+          if grep -rInE "(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,})" \
+             --exclude-dir=.git . ; then
+            echo "::error::发现疑似真实凭据，请改用占位符"
+            exit 1
+          fi
+          echo "OK  无真实凭据"
