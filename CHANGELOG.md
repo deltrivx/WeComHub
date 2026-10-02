@@ -2,6 +2,21 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.0.5] - 2026-10-02
+
+修复
+
+- **agent 脚本中文注释导致 Test 报错**：`scripts/notify-agent.sh` 的中文注释被 shell 当成命令执行（`command not found`）。Script 段与 Variables 全部改为英文，与官方 14 个 agent 一致（官方 agent 的 Variables 零中文）。
+
+变更
+
+- **配置来源分离**，各自只有一个入口，不再出现“改了一处另一处不生效”：
+  - 通知（出）→ 设置 → 通知 → **通知代理** → WeComHub，存 agent 脚本变量块
+  - 指令（入）→ 设置 → 通知 → **WeComHub**，存 `wecom.hub.cfg`
+- **不再预置任何值**：变量块只留占位符，任何设备/用户安装后自行填写即可。
+- 通知侧键（`RELAY_*` / `MIN_IMPORTANCE` / `ENABLE_NOTIFY`）从 cfg 模板与插件页移除。
+- `wecom-hub-save.php` 保存时保留 cfg 中不属于本页的既有键，避免覆盖面。
+
 ## [1.0.4] - 2026-10-02
 
 修复

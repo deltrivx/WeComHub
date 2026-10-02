@@ -24,6 +24,11 @@
 - 阵列启动钩子开机自启，不再依赖 /boot/config/go
 - 插件页显示完整描述
 
+### 1.0.5
+- agent 脚本注释全英文，修复 Test 按钮报 command not found
+- 通知/指令配置分离，各自只有一个入口
+- 不再预置任何值，任何设备安装后自行填写即可
+
 ### 1.0.4
 - 修复通知代理页面读不到配置（部署带变量块的完整脚本）
 - agents/WeComHub.xml 与 scripts/notify-agent.sh 保持单一真相源
