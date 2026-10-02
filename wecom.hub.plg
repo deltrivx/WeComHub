@@ -21,7 +21,18 @@
 - 设置 → 通知 UI 配置入口
 - 系统通知经中转转发至企业微信
 - 内置本地指令服务，接收企微反向调用
-- 不再依赖 /boot/config/go 兜底
+- 阵列启动钩子开机自启，不再依赖 /boot/config/go
+
+### 1.0.1
+- 通知 payload 对齐现役中转侧（token + text 核心字段）
+- 指令服务固定 POST /exec 并统一返回 JSON
+- 指令支持中文别名（状态/磁盘/温度/阵列/重启）
+- 「允许重启的容器名前缀」可在设置页配置，留空即禁用 restart
+- 未配置令牌时指令服务 fail closed
+- 修复版本索引与更新检查的字段名不一致
+
+### 1.0.0
+- 初始版本
   </CHANGES>
 
   <FILE Name="/usr/local/emhttp/plugins/&name;/&name;.page" Mode="0755">
