@@ -1,10 +1,122 @@
 #!/bin/bash
-# WeComHub 通知 agent（部署副本）
-#
-# 插件安装时部署到 /boot/config/plugins/dynamix/notifications/agents/WeComHub.sh，
-# 由 Unraid notify 逐个执行。实际逻辑与 wecom-hub-notify-agent.sh 一致，
-# 此处仅做转发，便于单一维护点。
+############
+{0}
+############
 
-AGENT="/usr/local/emhttp/plugins/WeComHub/wecom-hub-notify-agent.sh"
-[ -x "$AGENT" ] && exec "$AGENT"
-exit 0
+############
+# WeComHub 通知代理：把 Unraid 系统通知经中转服务转发到企业微信。
+#
+# 本文件由「设置 → 通知 → 通知代理」页面在点击 Apply 时重新生成：
+# 页面把上方变量写入 {0} 位置，因此不要手工编辑变量区。
+#
+# 手动测试：
+#   EVENT="My Event" SUBJECT="My Subject" DESCRIPTION="My Description" \
+#   CONTENT="My Message" IMPORTANCE="alert" LINK="/Dashboard" \
+#   bash /boot/config/plugins/dynamix/notifications/agents/WeComHub.sh
+#
+# 若通知未送达，查看 /var/log/notify_WeComHub。
+############
+
+SCRIPTNAME=$(basename "$0")
+LOG="/var/log/notify_${SCRIPTNAME%.*}"
+
+# 快速测试时补齐通知系统注入的环境变量
+EVENT="${EVENT:-Unraid Status}"
+SUBJECT="${SUBJECT:-Notification}"
+DESCRIPTION="${DESCRIPTION:-No description}"
+IMPORTANCE="${IMPORTANCE:-normal}"
+CONTENT="${CONTENT:-}"
+LINK="${LINK:-}"
+HOSTNAME="${HOSTNAME:-$(hostname)}"
+
+# 去掉通知系统字面量里的 \n 转义，避免企业微信里出现 \n 字样
+[[ -n "${DESCRIPTION}" ]] && DESCRIPTION=$(printf '%b' "${DESCRIPTION}")
+[[ -n "${CONTENT}" ]] && CONTENT=$(printf '%b' "${CONTENT}")
+
+RELAY_HOST="${RELAY_HOST:-}"
+RELAY_PORT="${RELAY_PORT:-8181}"
+RELAY_PUSH_TOKEN="${RELAY_PUSH_TOKEN:-}"
+MIN_IMPORTANCE="${MIN_IMPORTANCE:-normal}"
+
+# 未配置则静默退出，不阻塞 Unraid 其他通知流程
+if [[ -z "${RELAY_HOST}" || -z "${RELAY_PUSH_TOKEN}" ]]; then
+  echo "$(date) 配置缺失（Relay Host / Push Token），放弃发送" >>"$LOG"
+  exit 0
+fi
+
+# 重要级别过滤
+case "${MIN_IMPORTANCE}" in
+  alert)   [[ "${IMPORTANCE}" == "alert" ]] || exit 0 ;;
+  warning) [[ "${IMPORTANCE}" == "alert" || "${IMPORTANCE}" == "warning" ]] || exit 0 ;;
+esac
+
+# 清理全局代理，避免请求被导入 LAN 代理
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+
+[[ -z "${TITLE}" ]] && TITLE="${SUBJECT}"
+[[ -z "${MESSAGE}" ]] && MESSAGE="${DESCRIPTION}"
+
+export WH_EVENT="${EVENT}"
+export WH_SUBJECT="${SUBJECT}"
+export WH_DESC="${DESCRIPTION}"
+export WH_IMPORTANCE="${IMPORTANCE}"
+export WH_CONTENT="${CONTENT}"
+export WH_LINK="${LINK}"
+export WH_HOSTNAME="${HOSTNAME}"
+export WH_TITLE="${TITLE}"
+export WH_MESSAGE="${MESSAGE}"
+export WH_HOST="${RELAY_HOST}"
+export WH_PORT="${RELAY_PORT}"
+export WH_TOKEN="${RELAY_PUSH_TOKEN}"
+export WH_LOG="${LOG}"
+
+python3 - <<'PYEOF'
+import json, os, time, urllib.request
+
+host = os.environ.get("WH_HOST", "")
+port = os.environ.get("WH_PORT", "8181")
+token = os.environ.get("WH_TOKEN", "")
+
+event = os.environ.get("WH_EVENT", "")
+desc = os.environ.get("WH_DESC", "")
+imp = os.environ.get("WH_IMPORTANCE", "normal")
+content = os.environ.get("WH_CONTENT", "")
+link = os.environ.get("WH_LINK", "")
+hostname = os.environ.get("WH_HOSTNAME", "")
+title = os.environ.get("WH_TITLE", "")
+message = os.environ.get("WH_MESSAGE", "")
+
+# payload 契约与既有中转侧保持一致：token + text（已渲染的 markdown 正文）。
+# 其余字段为可选扩展，便于中转做分级/路由，多余字段应被忽略。
+body = message
+if content and content != message:
+    body = (body + "\n" + content).strip() if body else content
+
+text = "【%s 通知】\n> 事件: %s\n> 重要性: %s\n\n**标题:** %s" % (
+    hostname or "Unraid", event, imp, title)
+if body:
+    text += "\n\n**详情:**\n" + body
+if link:
+    text += "\n\n[查看详情](%s)" % link
+
+payload = {
+    "token": token,
+    "text": text,
+    "event": event,
+    "importance": imp,
+    "content": content,
+    "link": link,
+}
+url = "http://%s:%s/notify" % (host, port)
+req = urllib.request.Request(
+    url,
+    data=json.dumps(payload).encode("utf-8"),
+    headers={"Content-Type": "application/json"},
+)
+try:
+    urllib.request.urlopen(req, timeout=10).read()
+except Exception as e:
+    # 通知失败不应影响 Unraid 其他流程，仅记录日志
+    with open(os.environ.get("WH_LOG", "/var/log/notify_WeComHub"), "a") as fh:
+        fh.write("%s FAIL %s\n" % (time.strftime("%F %T"), str(e)[:200]))
+PYEOF
