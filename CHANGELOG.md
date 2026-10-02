@@ -2,6 +2,13 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.0] - 2026-10-02
+
+修复
+
+- **存量用户升级后通知仍失效**：v1.0.9 只修了模板（新装生效），已存在的 agent 配置文件里没有 `export`，而安装钩子只在文件不存在时才生成，存量用户拿不到修复。现增加迁移：检测到缺 `export` 的配置文件就地补上（先备份 `.bak-preexport`），**不改动用户的变量值**。
+- **修正版本号规则**：`v1.0.10` 因 Unraid 用 `strcmp()` 比较版本而被判定为比 `v1.0.8` 旧（`1.0.10` < `1.0.8`），无法升级。改用 `v1.1.0` 发布，`v1.0.10` 作废。规则见 DEVELOPMENT.md。
+
 ## [1.0.10] - 2026-10-02
 
 修复
@@ -129,6 +136,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.0]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.0
 [1.0.10]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.10
 [1.0.9]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.9
 [1.0.8]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.8

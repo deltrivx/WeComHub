@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.0.10",
-  "latest_version": "v1.0.10",
-  "default": "v1.0.10",
+  "latest": "1.1.0",
+  "latest_version": "v1.1.0",
+  "default": "v1.1.0",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.10/WeComHub-1.0.10.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.0/WeComHub-1.1.0.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
-      "id": "v1.0.10",
-      "label": "WeComHub v1.0.10：存量配置文件自动补 export",
+      "id": "v1.1.0",
+      "label": "WeComHub v1.1.0：存量配置补 export + 版本号规则修正",
       "channel": "latest",
+      "released_at": "2026-10-02",
+      "notify": true,
+      "cmd": true
+    },
+    {
+      "id": "v1.0.10",
+      "label": "WeComHub v1.0.10：存量配置文件自动补 export（已被 v1.1.0 取代）",
+      "channel": "history",
       "released_at": "2026-10-02",
       "notify": true,
       "cmd": true
