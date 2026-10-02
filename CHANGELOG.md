@@ -1,0 +1,34 @@
+# 更新日志
+
+本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
+
+## [1.0.0] - 2026-10-02
+
+首个正式版本。把原本散落在 Unraid 上的两套企业微信脚本合并为标准插件，入口统一到 **设置 → 通知**。
+
+### 新增
+
+- **设置 → 通知** 可视化配置页面（`WeComHub.page`）：中转地址、端口、推送令牌、本地指令端口、最低通知级别。
+- `wecom-hub-save.php`：把表单写入 `/boot/config/plugins/WeComHub/wecom.hub.cfg`；令牌留空时保持原值不变。
+- `wecom-hub-notify-agent.sh`：把 Unraid 系统通知经中转服务转发到企业微信，支持 `IMPORTANCE` 分级过滤，发送失败静默退出。
+- `wecom-hub-cmd.py`：本地指令服务，监听 `LOCAL_CMD_PORT`，执行白名单只读查询（`help` / `status` / `docker` / `uptime` / `disk`），令牌使用常量时间比较。
+- `scripts/rc.WeComHub`：常驻服务的启停脚本，**不依赖 `/boot/config/go`**。
+- `scripts/notify-agent.sh`：dynamix notification agent 的转发副本，便于单一维护点。
+- `scripts/build-release.sh` / `scripts/verify-release.sh`：构建与产物校验。
+- `.github/workflows/verify.yml`：Shell 语法、PHP lint、XML 合法性、真实凭据扫描。
+- `.github/workflows/build-release.yml`：打 `v*` tag 时云端构建 `wecom.hub.plg` 与 `WeComHub-<版本>.txz` 并挂到 Release。
+- 文档：README、README.en、PLUGIN-README、DEVELOPMENT、RELEASES、docs/configuration.md。
+
+### 变更
+
+- 迁移自旧方案 `/boot/config/plugins/dynamix/notifications/agents/WeCom.sh` + `.wecom.env`：配置从散落 env 文件改为统一 cfg + UI。
+- 迁移自旧方案 `/boot/config/unraid-cmd/unraid_cmd.py` + user.scripts 常驻服务：由 `/etc/rc.d/rc.WeComHub` 接管启停。
+
+### 安全
+
+- 页面不回显已保存令牌，只提示「已设置/未设置」。
+- 仓库与文档中所有敏感值一律占位符：`RELAY_HOST`、`RELAY_PORT`、`RELAY_PUSH_TOKEN`、`LOCAL_CMD_PORT`。
+- `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
+- `restart <容器>` 受 `RESTART_ALLOW_PREFIX` 前缀白名单约束，默认不允许。
+
+[1.0.0]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.0

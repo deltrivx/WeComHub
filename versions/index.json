@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "default": "v1.0.0",
+  "latest_version": "v1.0.0",
+  "versions": [
+    {
+      "id": "v1.0.0",
+      "label": "WeComHub v1.0.0：通知出与指令入合并为标准插件正式版",
+      "channel": "latest",
+      "released_at": "2026-10-02",
+      "notify": true,
+      "cmd": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+WeComHub
+Copyright (c) 2026 deltrivx
+
+WeComHub 是独立维护的社区项目，与 Lime Technology, Inc.（Unraid）以及
+腾讯企业微信不存在从属、授权、赞助或官方背书关系。
+
+Unraid 及其标志是 Lime Technology, Inc. 的商标。企业微信的名称与标志归
+腾讯及相关权利人所有。其他产品名称、徽标、图标和商标亦归其各自权利人
+所有；本项目仅为识别、说明与互操作目的提及。
+
+本仓库不分发任何第一方或第三方账户凭据，亦不包含任何真实的中转服务地址、
+端口或令牌；文档中出现的 `RELAY_HOST`、`RELAY_PORT`、`RELAY_PUSH_TOKEN`、
+`LOCAL_CMD_PORT` 均为占位符。

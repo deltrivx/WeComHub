@@ -1,0 +1,12 @@
+<Plugin>
+  <Name>WeComHub</Name>
+  <Overview>Unraid WeCom (WeChat Work) hub plugin. Forwards Unraid system notifications to WeCom through a self-hosted relay with importance filtering, and accepts WeCom commands to run whitelisted read-only queries (status/docker/uptime/disk) or restart prefix-allowed containers. Configured entirely from Settings - Notification: no env files, no /boot/config/go edits.</Overview>
+  <PluginURL>https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg</PluginURL>
+  <PluginAuthor>deltrivx</PluginAuthor>
+  <Support>https://github.com/deltrivx/WeComHub/issues</Support>
+  <Project>https://github.com/deltrivx/WeComHub</Project>
+  <ReadMe>https://raw.githubusercontent.com/deltrivx/WeComHub/main/PLUGIN-README.md</ReadMe>
+  <Category>Other:Notifications</Category>
+  <MinVer>6.9.0</MinVer>
+  <License>MIT</License>
+</Plugin>

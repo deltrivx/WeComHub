@@ -1,0 +1,5 @@
+<CommunityApplications>
+  <Profile>WeComHub is an Unraid WeCom (WeChat Work) hub plugin maintained by deltrivx. It forwards Unraid system notifications to WeCom through a self-hosted relay, and accepts WeCom commands to run whitelisted read-only queries or restart allowed containers. All settings are configured from Settings - Notification. The repository contains the plugin, release snapshots, documentation, security notes, and support information.</Profile>
+  <WebPage>https://github.com/deltrivx/WeComHub</WebPage>
+  <Forum>https://github.com/deltrivx/WeComHub/issues</Forum>
+</CommunityApplications>

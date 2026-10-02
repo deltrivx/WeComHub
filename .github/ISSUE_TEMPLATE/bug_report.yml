@@ -1,0 +1,40 @@
+name: 问题报告
+description: 报告可重复的 WeComHub 故障
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: 请先移除推送令牌、真实中转地址、Cookie 和私人日志内容。
+  - type: input
+    id: versions
+    attributes:
+      label: 版本
+      description: WeComHub 与 Unraid 版本
+    validations:
+      required: true
+  - type: dropdown
+    id: direction
+    attributes:
+      label: 使用方向
+      options: [通知出（推送到企业微信）, 指令入（企业微信下发命令）, 两者都启用]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 重现步骤
+      description: 请给出最小、连续、可重复的步骤。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 已脱敏日志或截图
+      description: 例如 `/var/log/wecom-hub.log` 片段。请勿粘贴令牌与真实中转地址。
