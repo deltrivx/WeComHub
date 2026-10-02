@@ -60,6 +60,11 @@
     <URL>&gitURL;scripts/notify-agent.sh</URL>
     <MD5>{MD5_AGENTSH}</MD5>
   </FILE>
+  <!-- 开机自启钩子：rc.M 不会遍历 /etc/rc.d/rc.*，故由 array started 事件拉起 -->
+  <FILE Name="/usr/local/emhttp/plugins/dynamix/event/started/zz-wecomhub" Mode="0755">
+    <URL>&gitURL;scripts/event-started.sh</URL>
+    <MD5>{MD5_EVENT}</MD5>
+  </FILE>
   <!-- 安装/移除动作：不依赖 /boot/config/go -->
   <FILE Run="/bin/bash">
   <INLINE>
@@ -68,6 +73,20 @@ echo "&version;" > /usr/local/emhttp/plugins/&name;/version
 if [ -f /etc/rc.d/rc.&name; ]; then
   /etc/rc.d/rc.&name; restart &gt;/dev/null 2&gt;&amp;1 &amp;
 fi
+  </INLINE>
+  </FILE>
+
+  <!-- 卸载清理：停止服务并移除部署副本；保留 /boot/config/plugins/&name; 下的用户配置 -->
+  <FILE Run="/bin/bash" Method="remove">
+  <INLINE>
+if [ -x /etc/rc.d/rc.&name; ]; then
+  /etc/rc.d/rc.&name; stop &gt;/dev/null 2&gt;&amp;1
+fi
+rm -f /etc/rc.d/rc.&name;
+rm -f /boot/config/plugins/dynamix/notifications/agents/&name;.sh
+rm -f /usr/local/emhttp/plugins/dynamix/event/started/zz-wecomhub
+rm -rf /usr/local/emhttp/plugins/&name;
+# /boot/config/plugins/&name;/wecom.hub.cfg 保留，避免重装后需要重新填写
   </INLINE>
   </FILE>
 </PLUGIN>
