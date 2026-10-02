@@ -2,6 +2,18 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.2] - 2026-10-02
+
+新增
+
+- **配置持久化（解决误删丢失）**：agent 配置文件在调用程序本体前，会把变量镜像到持久化快照 `/boot/config/plugins/WeComHub/agent-vars.conf`（权限 0600）。安装钩子在下列情况自动从快照还原：配置文件不存在（全新安装 / 误点 Delete）、或仍是占位默认值。
+  - 此前：误点 Delete 后重装会退回占位符，用户需重新填写。
+  - 现在：重装 / 升级后自动拿回原有配置。
+
+修复
+
+- 还原逻辑早期版本会把 `####` 标记与变量值挤在同一行，已修正为标记独占一行。
+
 ## [1.1.1] - 2026-10-02
 
 修复
@@ -143,6 +155,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.2]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.2
 [1.1.1]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.1
 [1.1.0]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.0
 [1.0.10]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.10

@@ -32,6 +32,25 @@ export RELAY_HOST RELAY_PORT RELAY_PUSH_TOKEN MIN_IMPORTANCE TITLE MESSAGE
 # Do not edit the block above by hand; the page regenerates it on Apply.
 ############
 
+
+SNAP="/boot/config/plugins/WeComHub/agent-vars.conf"
+mkdir -p "/boot/config/plugins/WeComHub" 2>/dev/null
+# Mirror the variables into a persistent snapshot BEFORE calling the plugin body
+# (exec replaces this process, so nothing after it would run).
+# This file can be deleted (Delete button, flash restore); the snapshot is what
+# lets reinstallation recover your settings instead of falling back to placeholders.
+if [[ "${RELAY_HOST}" != "RELAY_HOST" && -n "${RELAY_HOST}" && "${RELAY_PUSH_TOKEN}" != "RELAY_PUSH_TOKEN" && -n "${RELAY_PUSH_TOKEN}" ]]; then
+  {
+    printf 'RELAY_HOST=%s\n' "$RELAY_HOST"
+    printf 'RELAY_PORT=%s\n' "$RELAY_PORT"
+    printf 'RELAY_PUSH_TOKEN=%s\n' "$RELAY_PUSH_TOKEN"
+    printf 'MIN_IMPORTANCE=%s\n' "$MIN_IMPORTANCE"
+    printf 'TITLE=%s\n' "$TITLE"
+    printf 'MESSAGE=%s\n' "$MESSAGE"
+  } > "$SNAP"
+  chmod 0600 "$SNAP" 2>/dev/null
+fi
+
 AGENT="/usr/local/emhttp/plugins/WeComHub/wecom-hub-notify-agent.sh"
 if [[ -x "$AGENT" ]]; then
   exec "$AGENT"
