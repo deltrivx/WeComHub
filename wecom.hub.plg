@@ -24,6 +24,9 @@
 - 阵列启动钩子开机自启，不再依赖 /boot/config/go
 - 插件页显示完整描述
 
+### 1.1.1
+- 修复升级覆盖用户凭据（删除残留 FILE 条目）
+
 ### 1.1.0
 - 存量配置文件自动补 export（不影响用户的变量值）
 
@@ -121,10 +124,6 @@
   <FILE Name="/etc/rc.d/rc.&name;" Mode="0755">
     <URL>&gitURL;scripts/rc.&name;</URL>
     <MD5>{MD5_RC}</MD5>
-  </FILE>
-  <FILE Name="/boot/config/plugins/dynamix/notifications/agents/&name;.sh" Mode="0755">
-    <URL>&gitURL;scripts/notify-agent.sh</URL>
-    <MD5>{MD5_AGENTSH}</MD5>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/&name;/scripts/event-started.sh" Mode="0755">
     <URL>&gitURL;scripts/event-started.sh</URL>

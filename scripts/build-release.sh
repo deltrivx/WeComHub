@@ -51,7 +51,7 @@ md5_of() { [ -f "$1" ] && md5sum "$1" | awk '{print $1}' || echo ''; }
 OUT="$DIST/wecom.hub.plg"
 cp "$ROOT/wecom.hub.plg" "$OUT"
 sed -i "s/{VERSION}/$VER/g" "$OUT"
-for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTSH MD5_AGENTTMPL MD5_EVENT MD5_AGENTXML MD5_README MD5_ICON; do
+for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTTMPL MD5_EVENT MD5_AGENTXML MD5_README MD5_ICON; do
   case "$k" in
     MD5_PAGE)    v="$(md5_of "$STAGE/$NAME.page")" ;;
     MD5_CSS)     v="$(md5_of "$STAGE/assets/$NAME.css")" ;;
@@ -61,7 +61,6 @@ for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD
     MD5_AGENT)   v="$(md5_of "$STAGE/wecom-hub-notify-agent.sh")" ;;
     MD5_CMD)     v="$(md5_of "$STAGE/wecom-hub-cmd.py")" ;;
     MD5_RC)      v="$(md5_of "$ROOT/scripts/rc.$NAME")" ;;
-    MD5_AGENTSH) v="$(md5_of "$ROOT/scripts/notify-agent.sh")" ;;
     MD5_AGENTTMPL) v="$(md5_of "$ROOT/scripts/agent-config-template.sh")" ;;
     MD5_EVENT)   v="$(md5_of "$ROOT/scripts/event-started.sh")" ;;
     MD5_AGENTXML) v="$(md5_of "$STAGE/agents/$NAME.xml")" ;;

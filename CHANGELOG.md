@@ -2,6 +2,13 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.1] - 2026-10-02
+
+修复
+
+- **升级会覆盖用户凭据（致命）**：plg 里残留一条 `<FILE>` 指向 `boot/config/plugins/dynamix/notifications/agents/WeComHub.sh`（源为含 `{0}` 的 `scripts/notify-agent.sh`）。Unraid 无条件覆盖 `<FILE>` 清单内的文件，导致用户已填的中转地址与推送令牌每次升级都被重置为占位默认值，通知与指令随之失效。已删除该条目——配置文件必须由安装钩子生成并排除在清单外。
+- **此前"升级不丢配置"的验证结论作废**：验证时只比对了文件 MD5，未比对内容，真实值被覆盖未被发现。
+
 ## [1.1.0] - 2026-10-02
 
 修复
@@ -136,6 +143,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.1]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.1
 [1.1.0]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.0
 [1.0.10]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.10
 [1.0.9]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.9
