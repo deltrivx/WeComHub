@@ -11,7 +11,7 @@ PY="/usr/local/emhttp/plugins/WeComHub/wecom-hub-cmd.py"
 CFG="/boot/config/plugins/WeComHub/wecom.hub.cfg"
 LOG="/var/log/wecom-hub.log"
 
-log() { echo "[$(date +%F %T)] $*" >>"$LOG" 2>/dev/null || true; }
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >>"$LOG" 2>/dev/null || true; }
 
 running() { pgrep -f "python3 -u $PY" >/dev/null 2>&1; }
 
@@ -19,6 +19,9 @@ start() {
   running && { log "already running"; return 0; }
   [ -f "$CFG" ] && set -a && . "$CFG" 2>/dev/null && set +a
   [ -x "$PY" ] || { log "missing $PY"; return 1; }
+  # 若端口已被占用（例如上一次实例尚未退出），先等它退干净再起，避免 bind 报错
+  pkill -f "wecom-hub-cmd.py" 2>/dev/null || true
+  n=0; while pgrep -f "wecom-hub-cmd.py" >/dev/null 2>&1 && [ $n -lt 10 ]; do sleep 1; n=$((n+1)); done
   setsid python3 -u "$PY" >>"$LOG" 2>&1 </dev/null &
   log "started (pid=$!)"
 }

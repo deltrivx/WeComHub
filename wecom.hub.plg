@@ -63,6 +63,11 @@
     <URL>&gitURL;wecom-hub-cmd.py</URL>
     <MD5>{MD5_CMD}</MD5>
   </FILE>
+  <!-- 插件页描述列：Unraid 插件管理器读取 plugins/<name>/README.md -->
+  <FILE Name="/usr/local/emhttp/plugins/&name;/README.md" Mode="0644">
+    <URL>&gitURL;README.plugin.md</URL>
+    <MD5>{MD5_README}</MD5>
+  </FILE>
   <!-- 通知代理定义：安装后出現在 设置 → 通知 → 通知代理，可在页面内填写并测试 -->
   <FILE Name="/usr/local/emhttp/plugins/dynamix/agents/&name;.xml" Mode="0644">
     <URL>&gitURL;agents/&name;.xml</URL>

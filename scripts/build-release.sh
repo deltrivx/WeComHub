@@ -27,6 +27,8 @@ for f in "$NAME.css" "$NAME.js"; do
 done
 # 通知代理定义：dynamix 扫描 agents/*.xml 后渲染到 设置 → 通知 → 通知代理
 [ -d "$ROOT/agents" ] && cp -a "$ROOT/agents" "$STAGE/agents"
+# 插件页描述：Unraid 插件管理器读取 plugins/<name>/README.md 作为「描述」列
+[ -f "$ROOT/README.plugin.md" ] && cp "$ROOT/README.plugin.md" "$STAGE/README.md"
 
 # 2) 生成 txz
 PAYLOAD="$WORK/payload"
@@ -40,7 +42,7 @@ md5_of() { [ -f "$1" ] && md5sum "$1" | awk '{print $1}' || echo ''; }
 OUT="$DIST/wecom.hub.plg"
 cp "$ROOT/wecom.hub.plg" "$OUT"
 sed -i "s/{VERSION}/$VER/g" "$OUT"
-for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTSH MD5_EVENT MD5_AGENTXML; do
+for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTSH MD5_EVENT MD5_AGENTXML MD5_README; do
   case "$k" in
     MD5_PAGE)    v="$(md5_of "$STAGE/$NAME.page")" ;;
     MD5_CSS)     v="$(md5_of "$STAGE/assets/$NAME.css")" ;;
@@ -53,6 +55,7 @@ for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD
     MD5_AGENTSH) v="$(md5_of "$ROOT/scripts/notify-agent.sh")" ;;
     MD5_EVENT)   v="$(md5_of "$ROOT/scripts/event-started.sh")" ;;
     MD5_AGENTXML) v="$(md5_of "$STAGE/agents/$NAME.xml")" ;;
+    MD5_README)  v="$(md5_of "$STAGE/README.md")" ;;
   esac
   sed -i "s/{$k}/${v}/g" "$OUT"
 done
