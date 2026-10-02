@@ -38,8 +38,11 @@ if command -v python3 >/dev/null 2>&1 && [ -f "$DIST/wecom.hub.plg" ]; then
 fi
 
 # 4) txz 内目录结构正确
+# 注意：不要写成 `tar -tJf ... | grep -q`。grep -q 命中后立即退出会让 tar 收到
+# SIGPIPE（141），在 `set -o pipefail` 下整条管道被判为失败，导致误报「缺少插件目录」。
 if [ -f "$DIST/$NAME-$VER.txz" ]; then
-  if tar -tJf "$DIST/$NAME-$VER.txz" | grep -q "usr/local/emhttp/plugins/$NAME"; then
+  TXZ_LIST="$(tar -tJf "$DIST/$NAME-$VER.txz" 2>/dev/null || true)"
+  if printf '%s\n' "$TXZ_LIST" | grep -qF "usr/local/emhttp/plugins/$NAME"; then
     say OK "txz 包含插件目录"
   else
     say FAIL "txz 缺少 usr/local/emhttp/plugins/$NAME"; rc=1
