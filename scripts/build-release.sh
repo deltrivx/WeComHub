@@ -17,6 +17,7 @@ mkdir -p "$DIST"
 # 1) 组装插件目录
 STAGE="$WORK/$NAME"
 mkdir -p "$STAGE/assets"
+echo "$VER" > "$STAGE/version"
 for f in "$NAME.page" "wecom-hub-save.php" "wecom-hub-update.php" \
          "wecom-hub-notify-agent.sh" "wecom-hub-cmd.py"; do
   [ -f "$ROOT/$f" ] && cp "$ROOT/$f" "$STAGE/"
@@ -54,6 +55,11 @@ done
 echo "    生成 wecom.hub.plg"
 
 # 4) 版本索引
+mkdir -p "$ROOT/versions/v$VER"
+cp -a "$STAGE/." "$ROOT/versions/v$VER/" 2>/dev/null || true
+cp "$ROOT/scripts/rc.$NAME" "$ROOT/versions/v$VER/" 2>/dev/null || true
+cp "$ROOT/scripts/notify-agent.sh" "$ROOT/versions/v$VER/" 2>/dev/null || true
+cp "$OUT" "$ROOT/versions/v$VER/wecom.hub.plg" 2>/dev/null || true
 cat > "$ROOT/versions/index.json" <<JSON
 {
   "name": "$NAME",

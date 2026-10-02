@@ -40,6 +40,10 @@
     <URL>&gitURL;wecom-hub-save.php</URL>
     <MD5>{MD5_SAVE}</MD5>
   </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/wecom-hub-update.php" Mode="0755">
+    <URL>&gitURL;wecom-hub-update.php</URL>
+    <MD5>{MD5_UPDATE}</MD5>
+  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/&name;/wecom-hub-notify-agent.sh" Mode="0755">
     <URL>&gitURL;wecom-hub-notify-agent.sh</URL>
     <MD5>{MD5_AGENT}</MD5>
@@ -55,5 +59,15 @@
   <FILE Name="/boot/config/plugins/dynamix/notifications/agents/&name;.sh" Mode="0755">
     <URL>&gitURL;scripts/notify-agent.sh</URL>
     <MD5>{MD5_AGENTSH}</MD5>
+  </FILE>
+  <!-- 安装/移除动作：不依赖 /boot/config/go -->
+  <FILE Run="/bin/bash">
+  <INLINE>
+mkdir -p /usr/local/emhttp/plugins/&name;
+echo "&version;" > /usr/local/emhttp/plugins/&name;/version
+if [ -f /etc/rc.d/rc.&name; ]; then
+  /etc/rc.d/rc.&name; restart &gt;/dev/null 2&gt;&amp;1 &amp;
+fi
+  </INLINE>
   </FILE>
 </PLUGIN>
