@@ -43,6 +43,18 @@ jobs:
           sys.exit(1 if bad else 0)
           PY
 
+      - name: Python syntax check
+        run: |
+          find . -name '*.py' -not -path './.git/*' | while read -r f; do
+            python3 -m py_compile "$f" && echo "OK  $f" || { echo "FAIL $f"; exit 1; }
+          done
+
+      - name: Static self-check suite
+        run: bash tests/verify-static.sh
+
+      - name: Command service contract test
+        run: python3 tests/cmd-service-contract.py
+
       - name: No real secrets committed
         run: |
           # 仓库不得包含真实凭据：只应出现占位符

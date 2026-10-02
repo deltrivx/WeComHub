@@ -49,11 +49,24 @@ Unraid 企业微信中枢插件：**设置 → 通知** 可视化配置，把 Un
 
 ## 文档
 
+**使用与排障**
+
 - [docs/configuration.md](docs/configuration.md) — 配置项详解
 - [docs/troubleshooting.md](docs/troubleshooting.md) — 排障
+- [SUPPORT.md](SUPPORT.md) — 支持与常见症状
+- [SECURITY.md](SECURITY.md) — 凭据与指令服务安全边界
+
+**项目与开发**
+
+- [ABOUT.md](ABOUT.md) — 项目定位、设计原则与架构
 - [DEVELOPMENT.md](DEVELOPMENT.md) — 开发约定
+- [CONTRIBUTING.md](CONTRIBUTING.md) — 贡献指南
+- [CHANGELOG.md](CHANGELOG.md) — 更新日志
 - [RELEASES.md](RELEASES.md) — 版本记录
+- [PLUGIN-README.md](PLUGIN-README.md) — 插件页说明
+- [README.en.md](README.en.md) — English
 
 ## 许可
 
-见 [LICENSE](LICENSE)。
+代码见 [LICENSE](LICENSE)（MIT）。原创文档与视觉资产见 [LICENSE-ASSETS.md](LICENSE-ASSETS.md)（CC BY-NC-SA 4.0）。
+第三方商标与关系声明见 [NOTICE](NOTICE)。
