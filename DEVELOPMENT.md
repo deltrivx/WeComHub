@@ -23,11 +23,13 @@
 
 | 路径 | 作用 |
 | --- | --- |
-| `WeComHub.page` | 设置 → 通知 UI |
+| `agents/WeComHub.xml` | 通知代理定义（渲染到 设置 → 通知 → 通知代理） |
+| `WeComHub.page` | 插件自身配置页 |
 | `wecom-hub-save.php` | 保存配置 |
 | `wecom-hub-notify-agent.sh` | 通知转发 |
 | `wecom-hub-cmd.py` | 本地指令服务 |
-| `scripts/rc.WeComHub` | 开机启动（不依赖 `/boot/config/go`） |
+| `scripts/event-started.sh` | 阵列启动事件钩子（开机自启） |
+| `scripts/rc.WeComHub` | 服务启停（不依赖 `/boot/config/go`） |
 | `wecom.hub.cfg` | 配置模板（占位值） |
 | `wecom.hub.plg` | 插件描述（构建时替换版本/MD5） |
 | `scripts/build-release.sh` | 构建（云端调用） |

@@ -12,18 +12,18 @@ WeComHub is an Unraid plugin that turns WeCom (WeChat Work) into a two-way chann
 
 ## Features
 
-- Configuration lives in **Settings -> Notification** — no env files, no edits to `/boot/config/go`.
+- Configuration lives in **Settings -> Notification -> Notification Agents** — same entry point as the built-in agents, no env files, no edits to `/boot/config/go`.
 - System notifications (array, disks, containers, uptime, ...) are relayed to a WeCom application.
 - Inbound commands: read-only queries (array, containers, load, disks) and restricted container restarts.
 - Minimum notification level filter: `normal` / `warning` / `alert`.
-- Starts at boot through `/etc/rc.d/rc.WeComHub`.
+- Starts at boot through the array-started event hook invoking `/etc/rc.d/rc.WeComHub`.
 - Every `plg` / `txz` archive is built by GitHub Actions and published to a Release.
 
 ## Why a relay is required
 
-WeCom only accepts API calls from IPs listed in the corporate "trusted IP" allowlist. A home or small-office Unraid box often has a rotating public IP, so direct calls are rejected.
+WeCom only accepts API calls from IPs listed in the corporate "trusted IP" allowlist. A fixed, stable public IP is therefore required, and the relay service provides it.
 
-WeComHub hands notifications to a relay service with a fixed public IP. The Unraid host never calls WeCom directly.
+WeComHub hands notifications to the relay; the Unraid host never calls WeCom directly.
 
 ## Architecture
 
@@ -41,14 +41,14 @@ In the Unraid WebGUI open **Plugins -> Install Plugin** and paste:
 https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg
 ```
 
-Then open **Settings -> Notification** and fill in:
+Then open **Settings -> Notification -> Notification Agents**, find **WeComHub**, and fill in:
 
 | Setting | Placeholder | Notes |
 | --- | --- | --- |
-| Relay host | `RELAY_HOST` | Domain or IP of your relay |
-| Relay port | `RELAY_PORT` | Default `8181` |
-| Push token | `RELAY_PUSH_TOKEN` | Shared secret with the relay |
-| Local command port | `LOCAL_CMD_PORT` | Default `8181` |
+| Relay Host | `RELAY_HOST` | Domain or IP of your relay |
+| Relay Port | `RELAY_PORT` | Default `8181` |
+| Push Token | `RELAY_PUSH_TOKEN` | Shared secret with the relay |
+| Minimum Importance | `normal` | Lowest notification level to forward |
 
 All values above are placeholders. Use your own; the repository never contains real credentials.
 
