@@ -18,16 +18,28 @@ if ($raw === false) {
     exit;
 }
 $info = json_decode($raw, true);
-if (!is_array($info) || empty($info['latest'])) {
+if (!is_array($info)) {
     echo json_encode(['ok' => false, 'error' => '版本索引格式异常']);
     exit;
 }
 
+// 兼容两种写法：latest（纯版本号）/ latest_version（带 v 前缀）
+$latest = (string)($info['latest'] ?? '');
+if ($latest === '' && !empty($info['latest_version'])) {
+    $latest = ltrim((string)$info['latest_version'], 'v');
+}
+if ($latest === '') {
+    echo json_encode(['ok' => false, 'error' => '版本索引缺少版本号']);
+    exit;
+}
+
+$current = ltrim($LOCAL_VER, 'v');
+
 echo json_encode([
     'ok'      => true,
-    'latest'  => $info['latest'],
+    'latest'  => $latest,
     'current' => $LOCAL_VER,
-    'hasUpdate' => ($LOCAL_VER !== '' && version_compare($info['latest'], $LOCAL_VER, '>')),
+    'hasUpdate' => ($current !== '' && version_compare($latest, $current, '>')),
     'downloadUrl' => $info['downloadUrl'] ?? '',
     'pluginUrl'   => $info['pluginUrl'] ?? '',
 ]);

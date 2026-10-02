@@ -2,6 +2,25 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.0.1] - 2026-10-02
+
+对齐**现役中转侧的真实契约**，修掉 v1.0.0 直接替换旧脚本后会失效的三处问题。
+
+### 修复
+
+- **通知 payload**：旧 `WeCom.sh` 发的是 `{token, text}`（已渲染好的 markdown 正文），v1.0.0 改成了结构化字段导致中转取不到正文。现在 `text` 为核心必填字段并沿用原有排版，结构化字段保留为可选扩展（中转忽略即可）。
+- **指令响应契约**：旧服务只认 `POST /exec` 且返回 JSON `{"ok", "result"}`；v1.0.0 用任意路径 + 纯文本响应。现在固定 `POST /exec`（根路径 `/` 保留兼容）并统一返回 JSON 对象。
+- **指令词汇**：旧企微菜单为中文（状态/磁盘/温度/阵列/重启 X）。现在增加中文别名表，中英文指令都可用。
+- **restart 前缀白名单**：原先硬编码在环境变量里、UI 无法配置，迁移后会静默失效或不受控。现在可以在设置页配置「允许重启的容器名前缀」，留空即完全禁用（fail closed）。
+- **容器名校验**：`str.isalnum()` 对中文返回 True，会放过非 ASCII 字符。现在显式限定 ASCII + `. _ -`。
+- **fail closed**：未配置 `RELAY_PUSH_TOKEN` 时，指令服务拒绝全部请求，避免产生无鉴权的命令端点。
+- **版本索引**：`versions/index.json` 原先只有 `latest_version`，而 `wecom-hub-update.php` 读的是 `latest`，导致检查更新恒失败。现两者都写，并让 updater 兼容两种写法。
+
+### 新增
+
+- 白名单指令：`status`、`array`、`disk`、`temp`、`docker`、`uptime`、`help` 及其中文别名。
+- `tests/cmd-service-contract.py`：路径契约、鉴权、中文别名、restart 前缀约束、非法字符与响应码的契约测试（39 项）。
+
 ## [1.0.0] - 2026-10-02
 
 首个正式版本。把原本散落在 Unraid 上的两套企业微信脚本合并为标准插件，入口统一到 **设置 → 通知**。
@@ -31,4 +50,5 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - `restart <容器>` 受 `RESTART_ALLOW_PREFIX` 前缀白名单约束，默认不允许。
 
+[1.0.1]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.1
 [1.0.0]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.0
