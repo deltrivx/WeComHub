@@ -24,6 +24,10 @@
 - 阵列启动钩子开机自启，不再依赖 /boot/config/go
 - 插件页显示完整描述
 
+### 1.0.4
+- 修复通知代理页面读不到配置（部署带变量块的完整脚本）
+- agents/WeComHub.xml 与 scripts/notify-agent.sh 保持单一真相源
+
 ### 1.0.3
 - 新增 plugins/WeComHub/README.md，修复插件页「描述」列空白
 - RESTART_ALLOW_PREFIX 支持 * 通配，允许重启任意容器，无需逐个配置

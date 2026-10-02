@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.0.3",
-  "latest_version": "v1.0.3",
-  "default": "v1.0.3",
+  "latest": "1.0.4",
+  "latest_version": "v1.0.4",
+  "default": "v1.0.4",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.3/WeComHub-1.0.3.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.4/WeComHub-1.0.4.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.0.4",
+      "label": "WeComHub v1.0.4：修复通知代理页面读不到配置",
+      "channel": "latest",
+      "released_at": "2026-10-02",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.0.3",
       "label": "WeComHub v1.0.3：插件页描述、restart 通配与 rc 修复",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-02",
       "notify": true,
       "cmd": true

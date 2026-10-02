@@ -1,5 +1,10 @@
 # Releases
 
+## v1.0.4（通知代理配置页修复）
+
+- 修复「设置 → 通知 → 通知代理 → WeComHub」读不到任何配置项的问题。原因：页面从所编辑的 `.sh` 文件里的 `####...####` 变量块读取变量，而插件部署的是不含变量块的转发壳。现改为部署带 `{0}` 占位与完整实现的脚本，与官方 agent 结构一致。
+- `agents/WeComHub.xml` 与 `scripts/notify-agent.sh` 的脚本体保持单一真相源，避免两处漂移。
+
 ## v1.0.3（插件页描述、restart 通配、rc 修复）
 
 - 新增 `plugins/WeComHub/README.md`，修复 Unraid 插件页「描述」列空白（该列读 README.md，不读 plg 内的 CHANGES）
