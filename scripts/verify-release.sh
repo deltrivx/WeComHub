@@ -19,9 +19,9 @@ done
 
 # 2) plg 无未替换占位符
 if [ -f "$DIST/wecom.hub.plg" ]; then
-  if grep -qE '\{(VERSION|MD5_[A-Z]+)\}' "$DIST/wecom.hub.plg"; then
+  if grep -qE '\{(VERSION|MD5_[A-Z0-9_]+)\}' "$DIST/wecom.hub.plg"; then
     say FAIL "plg 仍有未替换占位符"
-    grep -oE '\{(VERSION|MD5_[A-Z]+)\}' "$DIST/wecom.hub.plg" | sort -u
+    grep -oE '\{(VERSION|MD5_[A-Z0-9_]+)\}' "$DIST/wecom.hub.plg" | sort -u
     rc=1
   else
     say OK "plg 占位符已全部替换"
