@@ -94,6 +94,9 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.0.6]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.6
+[1.0.5]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.5
+[1.0.4]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.4
 [1.0.3]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.3
 [1.0.2]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.2
 [1.0.1]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.1

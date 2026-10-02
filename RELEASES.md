@@ -1,5 +1,19 @@
 # Releases
 
+## v1.0.6（程序与配置解耦）
+
+修复「升级插件会丢掉用户配置」与「全新安装 Test 报 `{0}`」两个结构性问题。
+
+- **程序与配置拆成两半**：
+  - 程序本体 `wecom-hub-notify-agent.sh` 由 plg 的 `<FILE>` 管理，随插件升级更新
+  - agent 配置文件 `agents/WeComHub.sh` 不在 `<FILE>` 中，只存用户变量并 `exec` 程序本体
+- **安装钩子首次生成** agent 配置文件（含默认变量块，无 `{0}`）：
+  - 首次安装即可用，Test 不再报 `command not found`
+  - 已存在则保留用户配置，升级不受影响
+  - 误删后重装能恢复
+- 实测确认 Unraid 会无条件覆盖 `<FILE>` 中的文件，因此 agent 配置文件**必须**排除在清单外
+- `agents/WeComHub.xml` 与 `scripts/agent-config-template.sh` 由同一源生成，避免漂移
+
 ## v1.0.5（配置分离与全英文脚本）
 
 - **修复 agent 脚本中文注释导致的报错**：Test 按钮执行时中文注释被 shell 当成命令（`command not found`）。Script 段与 Variables 全部改为英文，与官方 14 个 agent 一致（官方 agent 的 Variables 零中文）。
