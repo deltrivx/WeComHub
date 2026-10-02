@@ -7,9 +7,17 @@
 鉴权：共享令牌（RELAY_PUSH_TOKEN），与通知同源。
 配置：/boot/config/plugins/WeComHub/wecom.hub.cfg
 
+对外契约（与既有中转侧保持一致，勿随意变更）：
+- POST /exec {"token":..., "cmd":...} -> 200 {"ok": true, "result": "<文本>"}
+- 鉴权失败 -> 403 {"ok": false, "err": "forbidden"}
+- 非法 JSON -> 400 {"ok": false, "err": "bad json"}
+- 未知路径 -> 404 {"ok": false, "err": "not found"}
+
 安全约定：
 - 只执行白名单命令，绝不拼接任意 shell。
 - 令牌比较使用常量时间比较，避免时序侧信道。
+- 未配置令牌时拒绝全部指令（fail closed），避免出现无鉴权的命令端点。
+- `restart` 受 RESTART_ALLOW_PREFIX 前缀白名单约束，默认不允许。
 """
 import json
 import os
@@ -24,13 +32,26 @@ TOKEN = os.environ.get("RELAY_PUSH_TOKEN", "")
 
 # 命令白名单：指令名 -> (说明, 命令模板)
 COMMANDS = {
-    "status": ("阵列/磁盘/容器概览", "mdcmd status | grep -E '^mdState|^mdNumDisks|^mdNumMissing'"),
-    "docker": ("容器列表", "docker ps --format 'table {{.Names}}\\t{{.Status}}'"),
-    "uptime": ("系统运行时间", "uptime"),
+    "status": ("阵列与系统状态", "mdcmd status | grep -E '^mdState|^mdNumDisks|^mdNumMissing'"),
+    "array": ("阵列健康与校验", "mdcmd status | grep -E '^mdState|^mdResync|^mdNumInvalid|^sbNumDisks|^mdNumDisabled'"),
     "disk": ("磁盘使用", "df -h /mnt/user | tail -2"),
+    "temp": ("CPU/核心温度", "sensors 2>/dev/null | head -20"),
+    "docker": ("运行中容器列表", "docker ps --format 'table {{.Names}}\\t{{.Status}}'"),
+    "uptime": ("系统运行时间与负载", "uptime"),
 }
 
-# 允许重启的容器名前缀（避免任意容器被操作）
+# 指令别名：中文菜单与英文指令都可用（既有企微菜单为中文，必须保持兼容）
+ALIASES = {
+    "status": "status", "状态": "status",
+    "array": "array", "阵列": "array",
+    "disk": "disk", "磁盘": "disk",
+    "temp": "temp", "温度": "temp",
+    "docker": "docker", "container": "docker", "containers": "docker", "容器": "docker",
+    "uptime": "uptime", "运行时长": "uptime", "负载": "uptime",
+    "help": "help", "帮助": "help", "?": "help", "menu": "help",
+}
+
+# 允许重启的容器名前缀（避免任意容器被操作）；空串表示完全禁用 restart
 RESTART_ALLOW_PREFIX = os.environ.get("RESTART_ALLOW_PREFIX", "")
 
 
@@ -52,62 +73,110 @@ def sh(cmd: str, timeout: int = 15) -> str:
         return "执行失败: %s" % e
 
 
+def fmt_help() -> str:
+    lines = ["【Unraid 指令】"]
+    order = ["status", "array", "disk", "temp", "docker", "uptime"]
+    zh = {
+        "status": "状态", "array": "阵列", "disk": "磁盘",
+        "temp": "温度", "docker": "容器", "uptime": "运行时长",
+    }
+    for k in order:
+        desc = COMMANDS.get(k, ("", ""))[0]
+        lines.append("%s / %s - %s" % (zh.get(k, k), k, desc))
+    if RESTART_ALLOW_PREFIX:
+        lines.append("重启 <容器名> / restart <容器名> - 重启指定容器（仅限前缀 %s*）" % RESTART_ALLOW_PREFIX)
+    else:
+        lines.append("重启 <容器名> - 未启用（未配置 RESTART_ALLOW_PREFIX）")
+    lines.append("帮助 / help - 本菜单")
+    return "\n".join(lines)
+
+
+def restart_container(name: str) -> str:
+    """重启容器。返回给用户的文本（不抛异常，拒绝原因也以文本回传）。"""
+    name = (name or "").strip()
+    if not name:
+        return "用法: 重启 <容器名>"
+
+    # 前缀白名单：未配置则完全禁用
+    if not RESTART_ALLOW_PREFIX:
+        return "重启已被禁用：请先在设置页配置「允许重启的容器名前缀」"
+    if not name.startswith(RESTART_ALLOW_PREFIX):
+        return "重启不被允许：%s（仅允许前缀 %s*）" % (name, RESTART_ALLOW_PREFIX)
+
+    # 字符集校验：仅 ASCII 字母数字与 . _ -（isalnum() 对中文返回 True，必须显式限定 ASCII）
+    if not name.isascii() or not all(c.isalnum() or c in "._-" for c in name):
+        return "容器名非法"
+
+    exists = sh("docker ps -a --format '{{.Names}}' | grep -Fx %s" % json.dumps(name))
+    if not exists or exists == "(无输出)":
+        return "未找到容器: %s" % name
+    sh("docker restart %s" % name, timeout=60)
+    time.sleep(2)
+    st = sh("docker ps --filter name=^/%s$ --format '{{.Status}}'" % name)
+    return "【重启】%s → %s" % (name, st if st and st != "(无输出)" else "已执行")
+
+
+def dispatch(cmd: str) -> str:
+    """把指令文本解析并执行，返回结果文本。未知指令返回菜单。"""
+    raw = (cmd or "").strip()
+    if not raw:
+        return fmt_help()
+
+    low = raw.lower()
+
+    # 重启：<前缀> <容器名>，支持中英文
+    if low.startswith("重启") or low.startswith("restart"):
+        parts = raw.split(None, 1)
+        if len(parts) < 2:
+            return "用法: 重启 <容器名>"
+        return restart_container(parts[1])
+
+    # 白名单查询：中文别名优先按原文匹配，英文按小写匹配
+    key = ALIASES.get(raw) or ALIASES.get(low)
+    if key == "help":
+        return fmt_help()
+    if key in COMMANDS:
+        return sh(COMMANDS[key][1])
+    return "未知指令: %s\n\n%s" % (raw, fmt_help())
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):  # 静音默认访问日志
         pass
 
-    def _send(self, code: int, text: str):
-        body = text.encode("utf-8")
+    def _send_json(self, code: int, obj: dict):
+        body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
-        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
     def do_POST(self):  # noqa: N802
+        # 路径契约：中转侧固定调用 /exec；根路径保留以兼容旧调用方
+        path = (self.path or "/").rstrip("/") or "/"
+        if path not in ("/exec", "/"):
+            self._send_json(404, {"ok": False, "err": "not found"})
+            return
+
         try:
             n = int(self.headers.get("Content-Length") or 0)
-            raw = self.rfile.read(n) if n else b"{}"
-            data = json.loads(raw.decode("utf-8"))
+            raw = self.rfile.read(n) if n else b""
+            data = json.loads(raw.decode("utf-8")) if raw else {}
         except Exception:  # noqa: BLE001
-            self._send(400, "bad request")
+            self._send_json(400, {"ok": False, "err": "bad json"})
             return
 
-        if not constant_time_eq(str(data.get("token", "")), TOKEN):
-            self._send(403, "forbidden")
+        # fail closed：未配置令牌时拒绝全部指令
+        if not TOKEN or not constant_time_eq(str(data.get("token", "")), TOKEN):
+            self._send_json(403, {"ok": False, "err": "forbidden"})
             return
 
-        cmd = str(data.get("cmd", "")).strip().lower()
-        arg = str(data.get("arg", "")).strip()
-
-        if cmd == "help" or cmd == "":
-            lines = ["可用指令："]
-            for k, (desc, _) in COMMANDS.items():
-                lines.append("  %-8s %s" % (k, desc))
-            if RESTART_ALLOW_PREFIX:
-                lines.append("  restart  重启容器（仅限前缀 %s*）" % RESTART_ALLOW_PREFIX)
-            self._send(200, "\n".join(lines))
-            return
-
-        if cmd == "restart":
-            if not RESTART_ALLOW_PREFIX or not arg.startswith(RESTART_ALLOW_PREFIX):
-                self._send(403, "restart 不被允许：%s" % (arg or "(空)"))
-                return
-            if not arg.isalnum() and not all(c.isalnum() or c in "-_" for c in arg):
-                self._send(400, "非法容器名")
-                return
-            self._send(200, sh("docker restart %s" % arg, timeout=60))
-            return
-
-        if cmd in COMMANDS:
-            self._send(200, sh(COMMANDS[cmd][1]))
-            return
-
-        self._send(404, "未知指令: %s（发送 help 查看）" % cmd)
+        self._send_json(200, {"ok": True, "result": dispatch(data.get("cmd", ""))})
 
 
 def main():
-    global PORT
+    global PORT, TOKEN, RESTART_ALLOW_PREFIX
     if os.path.exists(CFG):
         for line in open(CFG, encoding="utf-8", errors="ignore"):
             line = line.strip()
@@ -115,8 +184,14 @@ def main():
                 k, v = line.split("=", 1)
                 if k == "LOCAL_CMD_PORT" and v.isdigit():
                     PORT = int(v)
-                if k == "RELAY_PUSH_TOKEN":
-                    globals()["TOKEN"] = v
+                elif k == "RELAY_PUSH_TOKEN":
+                    TOKEN = v
+                elif k == "RESTART_ALLOW_PREFIX":
+                    RESTART_ALLOW_PREFIX = v
+
+    if not TOKEN:
+        print("[%s] WARN RELAY_PUSH_TOKEN 未配置，指令服务将拒绝全部请求" % (
+            time.strftime("%Y-%m-%d %H:%M:%S")), flush=True)
 
     print("[%s] WeComHub cmd service on :%d" % (
         time.strftime("%Y-%m-%d %H:%M:%S"), PORT), flush=True)

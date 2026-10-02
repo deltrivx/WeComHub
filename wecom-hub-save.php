@@ -25,6 +25,7 @@ $ALLOWED = [
     'ENABLE_NOTIFY'   => 'bool',
     'ENABLE_CMD'      => 'bool',
     'MIN_IMPORTANCE'  => 'level',
+    'RESTART_ALLOW_PREFIX' => 'prefix',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -50,6 +51,10 @@ foreach ($ALLOWED as $key => $kind) {
             break;
         case 'token':
             if ($v !== '' && !preg_match('/^[[:print:]]+$/', $v)) { fail("$key invalid"); }
+            break;
+        case 'prefix':
+            // 容器名前缀：仅允许 ASCII 字母数字 . _ -，避免被当作 shell 片段
+            if ($v !== '' && !preg_match('/^[A-Za-z0-9._-]+$/', $v)) { fail("$key invalid"); }
             break;
     }
     $out[$key] = $v;

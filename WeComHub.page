@@ -61,6 +61,11 @@ $sel = fn($k, $v, $d = 'normal') => (($current[$k] ?? $d) === $v) ? ' selected' 
         <td><input type="number" name="LOCAL_CMD_PORT" value="<?= $val('LOCAL_CMD_PORT', '8181') ?>" placeholder="LOCAL_CMD_PORT"></td>
       </tr>
       <tr>
+        <td>允许重启的容器名前缀</td>
+        <td><input type="text" name="RESTART_ALLOW_PREFIX" value="<?= $val('RESTART_ALLOW_PREFIX') ?>" placeholder="留空=禁用重启">
+          <small>仅该前缀开头的容器可被企微指令重启；留空则完全禁用 restart</small></td>
+      </tr>
+      <tr>
         <td>最低通知级别</td>
         <td>
           <select name="MIN_IMPORTANCE">

@@ -51,14 +51,35 @@ host = os.environ.get("WH_HOST", "")
 port = os.environ.get("WH_PORT", "8181")
 token = os.environ.get("WH_TOKEN", "")
 
+event = os.environ.get("WH_EVENT", "")
+subject = os.environ.get("WH_SUBJECT", "")
+desc = os.environ.get("WH_DESC", "")
+imp = os.environ.get("WH_IMPORTANCE", "normal")
+content = os.environ.get("WH_CONTENT", "")
+link = os.environ.get("WH_LINK", "")
+
+# payload 契约必须与既有中转侧保持一致：
+# 核心字段为 token + text（已渲染的 markdown 正文），中转只读这两个字段即可工作；
+# 其余结构化字段为可选扩展，便于中转侧做分级/路由，多余字段应被忽略。
+body = desc
+if content:
+    body = (body + "\n" + content).strip()
+
+text = "【Unraid 通知】\n> 事件: %s\n> 重要性: %s\n\n**标题:** %s" % (event, imp, subject)
+if body:
+    text += "\n\n**详情:**\n" + body
+if link:
+    text += "\n\n[查看详情](%s)" % link
+
 payload = {
     "token": token,
-    "event": os.environ.get("WH_EVENT", ""),
-    "subject": os.environ.get("WH_SUBJECT", ""),
-    "description": os.environ.get("WH_DESC", ""),
-    "importance": os.environ.get("WH_IMPORTANCE", "normal"),
-    "content": os.environ.get("WH_CONTENT", ""),
-    "link": os.environ.get("WH_LINK", ""),
+    "text": text,
+    "event": event,
+    "subject": subject,
+    "description": desc,
+    "importance": imp,
+    "content": content,
+    "link": link,
 }
 url = "http://%s:%s/notify" % (host, port)
 req = urllib.request.Request(
