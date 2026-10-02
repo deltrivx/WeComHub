@@ -24,6 +24,9 @@
 - 阵列启动钩子开机自启，不再依赖 /boot/config/go
 - 插件页显示完整描述
 
+### 1.0.10
+- 存量配置文件自动补 export（不影响用户的变量值）
+
 ### 1.0.9
 - 修复通知完全失效：变量块后补 export，exec 才会传递变量给程序本体
 
@@ -156,6 +159,30 @@ fi
 if [ "$NEED_INIT" = "1" ] &amp;&amp; [ -f "$AGENT_TPL" ]; then
   cp -f "$AGENT_TPL" "$AGENT_CONF"
   chmod 0755 "$AGENT_CONF"
+fi
+
+# 迁移：已存在但缺 export 的配置文件（v1.0.9 之前生成的），就地补上 export。
+# 本文件用 exec 调用程序本体，未导出的变量不会传递过去，会导致通知静默失效。
+# 只补 export 行，不动用户的变量值。
+if [ -f "$AGENT_CONF" ] &amp;&amp; ! grep -q '^export RELAY_HOST' "$AGENT_CONF" 2&gt;/dev/null; then
+  cp -f "$AGENT_CONF" "$AGENT_CONF.bak-preexport" 2&gt;/dev/null || true
+  python3 - "$AGENT_CONF" &lt;&lt;'PYMIG'
+import sys, re
+p = sys.argv[1]
+s = open(p, encoding="utf-8", errors="ignore").read()
+if "export RELAY_HOST" in s:
+    sys.exit(0)
+m = re.search(r"[#]{6,100}(.*?)[#]{6,100}", s, re.S)
+if not m:
+    sys.exit(0)
+ins = ("\n"
+       "# Variables must be exported: this file uses exec to call the plugin body,\n"
+       "# and unexported shell variables are not passed through.\n"
+       "export RELAY_HOST RELAY_PORT RELAY_PUSH_TOKEN MIN_IMPORTANCE TITLE MESSAGE\n")
+s = s[:m.end()] + ins + s[m.end():]
+open(p, "w", encoding="utf-8").write(s)
+PYMIG
+  chmod 0755 "$AGENT_CONF" 2&gt;/dev/null || true
 fi
 
 # 指令服务开机钩子（若事件目录存在）
