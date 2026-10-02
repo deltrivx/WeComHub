@@ -25,9 +25,9 @@ WeComHub 只把通知交给一台公网 IP 固定的中转服务代发，本地�
 
 ## 数据与安全
 
-- 配置保存于 `/boot/config/plugins/WeComHub/wecom.hub.cfg`，权限 `0600`
-- 推送令牌与中转地址由用户在通知代理页面自行填写，仓库与文档中不含真实值
-- 指令服务仅执行白名单命令；`restart` 受 `RESTART_ALLOW_PREFIX` 前缀限制并校验容器名字符集
+- 通知侧变量（中转地址/端口/令牌）保存在 agent 脚本的变量块中，由官方通知代理页管理
+- 指令侧配置保存在 `/boot/config/plugins/WeComHub/wecom.hub.cfg`，权限 `0600`
+- 指令服务仅执行白名单命令；`restart` 受 `RESTART_ALLOW_PREFIX` 限制并校验容器名字符集
 - 令牌比较使用常量时间比较，避免时序侧信道
 
 仓库与文档中一律使用占位符：`RELAY_HOST`、`RELAY_PORT`、`RELAY_PUSH_TOKEN`、`LOCAL_CMD_PORT`。

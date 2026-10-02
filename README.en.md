@@ -41,7 +41,9 @@ In the Unraid WebGUI open **Plugins -> Install Plugin** and paste:
 https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg
 ```
 
-Then open **Settings -> Notification -> Notification Agents**, find **WeComHub**, and fill in:
+Then configure the two sides. Each has exactly one entry point:
+
+**Outbound notifications** — **Settings -> Notification -> Notification Agents -> WeComHub**:
 
 | Setting | Placeholder | Notes |
 | --- | --- | --- |
@@ -49,6 +51,9 @@ Then open **Settings -> Notification -> Notification Agents**, find **WeComHub**
 | Relay Port | `RELAY_PORT` | Default `8181` |
 | Push Token | `RELAY_PUSH_TOKEN` | Shared secret with the relay |
 | Minimum Importance | `normal` | Lowest notification level to forward |
+
+**Inbound commands** — **Settings -> Notification -> WeComHub**: local listening port and
+the container restart scope, stored in `/boot/config/plugins/WeComHub/wecom.hub.cfg`.
 
 All values above are placeholders. Use your own; the repository never contains real credentials.
 

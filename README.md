@@ -22,16 +22,21 @@ Unraid 企业微信中枢插件：**设置 → 通知** 可视化配置，把 Un
 1. Unraid → 插件 → 安装插件 → 填本仓库 `wecom.hub.plg` 地址。
 2. 打开 **设置 → 通知 → 通知代理**，找到 **WeComHub**，按提示填写后点击 Apply。
 
+**通知侧**（设置 → 通知 → 通知代理 → WeComHub）：
+
 | 配置项 | 示例（占位符，非真实值） | 说明 |
 | --- | --- | --- |
-| Relay Host | `RELAY_HOST` | 你的 VPS 域名或 IP |
+| Relay Host | `RELAY_HOST` | 你的中转服务域名或 IP |
 | Relay Port | `RELAY_PORT` | 默认 `8181` |
 | Push Token | `RELAY_PUSH_TOKEN` | 与中转服务共享，用于鉴权 |
 | Minimum Importance | `normal` | 接收的最低通知级别 |
 
-> 以上均为通配占位符。请使用你自己的值；仓库与文档中不含任何真实凭据。
+**指令侧**（设置 → 通知 → WeComHub）：本地监听端口与「允许重启的容器名范围」，
+保存在 `/boot/config/plugins/WeComHub/wecom.hub.cfg`。
 
-指令侧的本地端口与「允许重启的容器名前缀」保存在 `/boot/config/plugins/WeComHub/wecom.hub.cfg`，可按需调整。
+两侧入口互不重叠，不存在“改了一处另一处不生效”的情况。
+
+> 以上均为通配占位符。请使用你自己的值；仓库与文档中不含任何真实凭据。
 
 ## 开发
 

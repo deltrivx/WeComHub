@@ -1,8 +1,7 @@
-/* WeComHub 设置页交互 */
+/* WeComHub 设置页交互（仅指令侧表单） */
 (function () {
   var form = document.getElementById('wh-form');
   var msg = document.getElementById('wh-msg');
-  var testBtn = document.getElementById('wh-test');
   if (!form) { return; }
 
   function setMsg(text, ok) {
@@ -22,10 +21,4 @@
       })
       .catch(function (err) { setMsg('保存失败：' + err, false); });
   });
-
-  if (testBtn) {
-    testBtn.addEventListener('click', function () {
-      setMsg('请到企业微信查看是否收到测试通知（保存后生效）', true);
-    });
-  }
 })();

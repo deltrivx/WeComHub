@@ -6,13 +6,29 @@
 
 ## 1. 配置层
 
+先分清是哪一侧，两侧的配置入口不同：
+
+**通知侧（推送到企微）**
+
+打开 **设置 → 通知 → 通知代理 → WeComHub**，确认：
+
+- `Relay Host` 已填
+- `Relay Port` 已填（默认 `8181`）
+- `Push Token` 已填（不是占位符 `RELAY_PUSH_TOKEN`）
+
+变量实际保存在 agent 脚本的变量块里：
+
+```bash
+sed -n '/^####/,/^####/p' /boot/config/plugins/dynamix/notifications/agents/WeComHub.sh
+```
+
+**指令侧（企微发指令给 Unraid）**
+
 ```bash
 cat /boot/config/plugins/WeComHub/wecom.hub.cfg
 ```
 
-确认：`ENABLE_NOTIFY` / `ENABLE_CMD` 为 `yes`，`RELAY_HOST`、`RELAY_PORT`、`RELAY_PUSH_TOKEN` 均已填写。
-
-令牌不会明文显示在设置页，只会提示「已设置」。如果忘记是否配置过，以 cfg 中是否有非空值为准。
+确认 `ENABLE_CMD=yes`，并记下 `LOCAL_CMD_PORT`（默认 `8181`）与 `RESTART_ALLOW_PREFIX`。
 
 ## 2. 链路层
 

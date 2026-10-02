@@ -2,8 +2,12 @@
 /**
  * WeComHub 设置页面（入口：设置 → 通知）
  *
- * 表单提交到 wecom-hub-save.php，配置写入 /boot/config/plugins/WeComHub/wecom.hub.cfg
- * 页面不回显已保存的令牌值（只显示是否已设置），避免凭据泄漏到浏览器。
+ * 职责边界（重要）：
+ *   - 通知侧配置（中转地址/端口/令牌/最低级别）由 Unraid 官方
+ *     「设置 → 通知 → 通知代理 → WeComHub」页面管理，写入 agent 脚本的变量块。
+ *   - 本页只管指令侧：是否启用、本地监听端口、允许重启的容器名范围。
+ *
+ * 这样任何设备/用户安装后都只有一处通知配置，不依赖任何预置值。
  */
 $CFG = '/boot/config/plugins/WeComHub/wecom.hub.cfg';
 
@@ -17,69 +21,39 @@ if (is_file($CFG)) {
     }
 }
 $val = fn($k, $d = '') => htmlspecialchars($current[$k] ?? $d);
-$tokenSet = !empty($current['RELAY_PUSH_TOKEN']);
 $checked = fn($k, $d = 'yes') => (($current[$k] ?? $d) === 'yes') ? ' checked' : '';
-$sel = fn($k, $v, $d = 'normal') => (($current[$k] ?? $d) === $v) ? ' selected' : '';
 ?>
 <link rel="stylesheet" href="/plugins/WeComHub/assets/WeComHub.css">
 
 <div class="wecomhub">
   <h2>WeComHub — 企业微信中枢</h2>
   <p class="wh-desc">
-    把 Unraid 系统通知推送到企业微信，并支持企业微信指令反向交互。
-    配置保存在插件配置文件中，无需编辑 env 文件、无需修改 <code>/boot/config/go</code>。
+    本页配置<strong>指令侧</strong>（企业微信发指令给 Unraid）。
+    通知侧的地址、端口与令牌请在
+    <a href="/Settings/NotificationAgents">设置 → 通知 → 通知代理 → WeComHub</a> 中填写。
   </p>
 
   <form id="wh-form" method="POST" action="/plugins/WeComHub/wecom-hub-save.php">
     <table class="wh-table">
-      <tr>
-        <td>启用通知推送</td>
-        <td><input type="checkbox" name="ENABLE_NOTIFY" value="yes"<?= $checked('ENABLE_NOTIFY') ?>>
-          <small>系统通知转发到企业微信</small></td>
-      </tr>
       <tr>
         <td>启用指令交互</td>
         <td><input type="checkbox" name="ENABLE_CMD" value="yes"<?= $checked('ENABLE_CMD') ?>>
           <small>接收企业微信指令并执行只读查询/容器重启</small></td>
       </tr>
       <tr>
-        <td>中转地址</td>
-        <td><input type="text" name="RELAY_HOST" value="<?= $val('RELAY_HOST') ?>" placeholder="RELAY_HOST">
-          <small>例如你的公网中转服务域名或 IP</small></td>
-      </tr>
-      <tr>
-        <td>中转端口</td>
-        <td><input type="number" name="RELAY_PORT" value="<?= $val('RELAY_PORT', '8181') ?>" placeholder="RELAY_PORT"></td>
-      </tr>
-      <tr>
-        <td>推送令牌</td>
-        <td><input type="password" name="RELAY_PUSH_TOKEN" placeholder="<?= $tokenSet ? '已设置，留空保持不变' : 'RELAY_PUSH_TOKEN' ?>" autocomplete="new-password">
-          <small><?= $tokenSet ? '当前已保存令牌，留空则不修改' : '与中转服务共享，用于鉴权' ?></small></td>
-      </tr>
-      <tr>
         <td>本地指令端口</td>
-        <td><input type="number" name="LOCAL_CMD_PORT" value="<?= $val('LOCAL_CMD_PORT', '8181') ?>" placeholder="LOCAL_CMD_PORT"></td>
+        <td><input type="number" name="LOCAL_CMD_PORT" value="<?= $val('LOCAL_CMD_PORT', '8181') ?>" placeholder="LOCAL_CMD_PORT">
+          <small>本地指令服务监听端口，需与中转服务指向的端口一致</small></td>
       </tr>
       <tr>
-        <td>允许重启的容器名前缀</td>
-        <td><input type="text" name="RESTART_ALLOW_PREFIX" value="<?= $val('RESTART_ALLOW_PREFIX') ?>" placeholder="* = 任意容器">
+        <td>允许重启的容器名范围</td>
+        <td><input type="text" name="RESTART_ALLOW_PREFIX" value="<?= $val('RESTART_ALLOW_PREFIX') ?>" placeholder="* = any container">
           <small>填 <code>*</code> 允许重启任意容器；填前缀（如 <code>Auto</code>）仅允许该前缀；留空则禁用重启</small></td>
-      </tr>
-      <tr>
-        <td>最低通知级别</td>
-        <td>
-          <select name="MIN_IMPORTANCE">
-            <option value="normal"<?= $sel('MIN_IMPORTANCE', 'normal') ?>>全部</option>
-            <option value="warning"<?= $sel('MIN_IMPORTANCE', 'warning') ?>>警告及以上</option>
-            <option value="alert"<?= $sel('MIN_IMPORTANCE', 'alert') ?>>仅严重</option>
-          </select>
-        </td>
       </tr>
     </table>
 
     <div class="wh-actions">
       <button type="submit" class="wh-save">保存</button>
-      <button type="button" class="wh-test" id="wh-test">发送测试通知</button>
       <span id="wh-msg"></span>
     </div>
   </form>
