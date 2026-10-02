@@ -59,6 +59,11 @@ if [[ -z "${RELAY_HOST}" || "${RELAY_HOST}" == "RELAY_HOST" \
   exit 0
 fi
 
+# 配置持久化：仅在配置有效时，把当前变量镜像到持久化快照。
+# agent 配置文件（用户在通知代理页填写处）可能被 Delete 删除或丢失；
+# 快照让重装/升级后能自动还原配置，而不是退回占位默认值。
+# 注意：本文件在 plg 的 <FILE> 清单内，每次升级都会更新，因此该逻辑能覆盖存量用户。
+
 case "${MIN_IMPORTANCE}" in
   alert)   [[ "${IMPORTANCE}" == "alert" ]] || exit 0 ;;
   warning) [[ "${IMPORTANCE}" == "alert" || "${IMPORTANCE}" == "warning" ]] || exit 0 ;;
@@ -69,6 +74,23 @@ unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 
 TITLE="${TITLE:-${SUBJECT}}"
 MESSAGE="${MESSAGE:-${DESCRIPTION}}"
+
+# 配置持久化：仅在配置有效时，把当前变量镜像到持久化快照。
+# agent 配置文件（用户在通知代理页填写处）可能被 Delete 删除或丢失；
+# 快照让重装/升级后能自动还原配置，而不是退回占位默认值。
+# 位置必须在 TITLE/MESSAGE 解析之后，否则快照会存到空值。
+# 本文件在 plg 的 <FILE> 清单内，每次升级都会更新，因此该逻辑能覆盖存量用户。
+SNAP="/boot/config/plugins/WeComHub/agent-vars.conf"
+mkdir -p "/boot/config/plugins/WeComHub" 2>/dev/null
+{
+  printf 'RELAY_HOST=%s\n' "${RELAY_HOST}"
+  printf 'RELAY_PORT=%s\n' "${RELAY_PORT}"
+  printf 'RELAY_PUSH_TOKEN=%s\n' "${RELAY_PUSH_TOKEN}"
+  printf 'MIN_IMPORTANCE=%s\n' "${MIN_IMPORTANCE}"
+  printf 'TITLE=%s\n' "${TITLE}"
+  printf 'MESSAGE=%s\n' "${MESSAGE}"
+} > "$SNAP" 2>/dev/null
+chmod 0600 "$SNAP" 2>/dev/null
 
 export WH_EVENT="${EVENT}"
 export WH_IMPORTANCE="${IMPORTANCE}"

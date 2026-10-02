@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.1.2",
-  "latest_version": "v1.1.2",
-  "default": "v1.1.2",
+  "latest": "1.1.3",
+  "latest_version": "v1.1.3",
+  "default": "v1.1.3",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.2/WeComHub-1.1.2.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.3/WeComHub-1.1.3.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.1.3",
+      "label": "WeComHub v1.1.3：配置持久化（快照存于程序本体）",
+      "channel": "latest",
+      "released_at": "2026-10-02",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.1.2",
       "label": "WeComHub v1.1.2：配置持久化，误删后重装自动还原",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-02",
       "notify": true,
       "cmd": true

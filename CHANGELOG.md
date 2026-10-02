@@ -2,6 +2,19 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.3] - 2026-10-02
+
+新增
+
+- **配置持久化**：通知 agent 在配置校验通过后，把当前变量镜像到持久化快照 `/boot/config/plugins/WeComHub/agent-vars.conf`（权限 0600）。安装钩子在配置文件缺失或仍是占位符时自动从快照还原。
+  - 解决此前「误点 Delete 后重装退回占位符、需重新填写」的问题。
+
+修复
+
+- **快照逻辑位置错误（v1.1.2）**：v1.1.2 把快照写在 agent 配置模板内，而该文件**不在 plg 的 `<FILE>` 清单中**（正是为避免升级覆盖），导致存量用户永远拿不到快照逻辑，实测快照不生成。现移至程序本体 `wecom-hub-notify-agent.sh`（在 `<FILE>` 内，每次升级更新），可覆盖存量用户。
+- **快照时机错误**：初版把快照写在 `TITLE`/`MESSAGE` 解析之前，导致这两个字段存为空值。现移至解析之后。
+- **快照写入时机**：只在配置校验通过（非占位符）后才写入，避免把占位符当作有效配置保存。
+
 ## [1.1.2] - 2026-10-02
 
 新增
@@ -155,6 +168,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.3]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.3
 [1.1.2]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.2
 [1.1.1]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.1
 [1.1.0]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.0
