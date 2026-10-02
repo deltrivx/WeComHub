@@ -51,8 +51,12 @@ ALIASES = {
     "help": "help", "帮助": "help", "?": "help", "menu": "help",
 }
 
-# 允许重启的容器名前缀（避免任意容器被操作）；空串表示完全禁用 restart
+# 允许重启的容器名范围：空串=禁用；"*"=允许任意容器；其他值=前缀匹配
+# 详见 wecom-hub-cmd.py 的 restart_container()
 RESTART_ALLOW_PREFIX = os.environ.get("RESTART_ALLOW_PREFIX", "")
+
+# 通配值：配置为该值时允许重启任意容器（显式选择，不是默认值）
+RESTART_ALLOW_ALL = "*"
 
 
 def constant_time_eq(a: str, b: str) -> bool:
@@ -83,7 +87,9 @@ def fmt_help() -> str:
     for k in order:
         desc = COMMANDS.get(k, ("", ""))[0]
         lines.append("%s / %s - %s" % (zh.get(k, k), k, desc))
-    if RESTART_ALLOW_PREFIX:
+    if RESTART_ALLOW_PREFIX == RESTART_ALLOW_ALL:
+        lines.append("重启 <容器名> / restart <容器名> - 重启任意容器")
+    elif RESTART_ALLOW_PREFIX:
         lines.append("重启 <容器名> / restart <容器名> - 重启指定容器（仅限前缀 %s*）" % RESTART_ALLOW_PREFIX)
     else:
         lines.append("重启 <容器名> - 未启用（未配置 RESTART_ALLOW_PREFIX）")
@@ -92,15 +98,24 @@ def fmt_help() -> str:
 
 
 def restart_container(name: str) -> str:
-    """重启容器。返回给用户的文本（不抛异常，拒绝原因也以文本回传）。"""
+    """重启容器。返回给用户的文本（不抛异常，拒绝原因也以文本回传）。
+
+    授权规则（RESTART_ALLOW_PREFIX）：
+      "*"   -> 允许任意容器
+      "xxx" -> 仅允许 xxx 前缀的容器
+      ""    -> 完全禁用
+
+    无论哪种模式，容器名都必须先通过严格字符集校验，且必须真实存在（走 docker 参数
+    而非拼接 shell），因此通配模式不会引入命令注入面。
+    """
     name = (name or "").strip()
     if not name:
         return "用法: 重启 <容器名>"
 
-    # 前缀白名单：未配置则完全禁用
+    # 授权：空=禁用；* = 任意；其他 = 前缀匹配
     if not RESTART_ALLOW_PREFIX:
-        return "重启已被禁用：请先在设置页配置「允许重启的容器名前缀」"
-    if not name.startswith(RESTART_ALLOW_PREFIX):
+        return "重启已被禁用：请在「设置 → 通知 → 通知代理 → WeComHub」把「允许重启的容器名前缀」设为 * 以允许任意容器"
+    if RESTART_ALLOW_PREFIX != RESTART_ALLOW_ALL and not name.startswith(RESTART_ALLOW_PREFIX):
         return "重启不被允许：%s（仅允许前缀 %s*）" % (name, RESTART_ALLOW_PREFIX)
 
     # 字符集校验：仅 ASCII 字母数字与 . _ -（isalnum() 对中文返回 True，必须显式限定 ASCII）

@@ -162,8 +162,20 @@ def main():
     code, j, raw = run(mod, TOKEN, "重启 nginx", prefix="wecom")
     check("前缀不匹配 restart 被拒（文本）", "不被允许" in result_of(j), "result=%r" % result_of(j))
 
+    # 通配模式：允许任意容器（必须显式配置为 *）
+    # 注意：只断言「已通过授权」，不断言 docker 是否可用（CI 容器里 docker 必然不可用）。
+    code, j, raw = run(mod, TOKEN, "重启 _definitely_missing_", prefix="*")
+    check("通配 * 通过授权（未报未授权）",
+          "不被允许" not in result_of(j) and "禁用" not in result_of(j),
+          "result=%r" % result_of(j))
+    check("通配 * 未报容器名非法", "非法" not in result_of(j), "result=%r" % result_of(j))
+
     code, j, raw = run(mod, TOKEN, "重启 wecom;rm -rf /", prefix="wecom")
     check("非法容器名被拒（文本）", "非法" in result_of(j), "result=%r" % result_of(j))
+
+    # 通配模式下字符集校验仍然生效（关键安全断言）
+    code, j, raw = run(mod, TOKEN, "重启 ;rm -rf /", prefix="*")
+    check("通配下非法字符仍被拒", "非法" in result_of(j), "result=%r" % result_of(j))
 
     # 非 ASCII 容器名必须被拒绝（isalnum() 对中文为 True，须显式限定 ASCII）
     code, j, raw = run(mod, TOKEN, "重启 wecom容器", prefix="wecom")

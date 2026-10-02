@@ -26,7 +26,7 @@
 | `ENABLE_NOTIFY` | `yes` | `yes` | 是否启用通知推送 |
 | `ENABLE_CMD` | `yes` | `yes` | 是否启用指令交互 |
 | `LOCAL_CMD_PORT` | `LOCAL_CMD_PORT` | `8181` | 本地指令服务监听端口 |
-| `RESTART_ALLOW_PREFIX` | 空 | 空 | 允许重启的容器名前缀；留空则完全禁用 restart |
+| `RESTART_ALLOW_PREFIX` | 空 | 空 | 重启授权范围：空=禁用，`*`=任意容器，其他=前缀匹配 |
 
 ## 为何需要中转
 
@@ -50,5 +50,13 @@
 | `uptime` | 系统运行时间 |
 | `disk` | 磁盘使用 |
 
-`restart <容器>` 仅在配置 `RESTART_ALLOW_PREFIX` 且容器名匹配前缀时允许，
-用于避免任意容器被操作。
+`restart <容器>` 的授权由 `RESTART_ALLOW_PREFIX` 控制：
+
+| 取值 | 行为 |
+| --- | --- |
+| 空（默认） | 完全禁用重启 |
+| `*` | 允许重启任意容器 |
+| 其他值（如 `Auto`） | 仅允许该前缀开头的容器 |
+
+无论哪种模式，容器名都必须通过字符集校验（仅 ASCII 字母数字与 `. _ -`）且必须
+真实存在；容器名作为 `docker` 参数传入而非拼接 shell，因此通配模式不会引入命令注入面。
