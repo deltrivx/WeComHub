@@ -2,6 +2,13 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.0.9] - 2026-10-02
+
+修复
+
+- **通知功能完全失效（严重）**：agent 配置文件用 `exec` 调用程序本体，但 shell 变量未 `export`，`exec` 不会把未导出的变量传给被调脚本，导致程序本体读到的 `RELAY_HOST` / `RELAY_PUSH_TOKEN` 恒为空，所有通知都被判定为「未配置」而静默丢弃。变量块后补 `export` 修复。
+  - 症状迷惑性在于：指令侧（`wecom-hub-cmd.py`）是直接解析文件取值，所以指令返回 200 正常，而通知侧走 `exec` 链却静默失败。
+
 ## [1.0.8] - 2026-10-02
 
 修复
@@ -116,6 +123,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.0.9]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.9
 [1.0.8]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.8
 [1.0.7]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.7
 [1.0.6]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.6

@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.0.8",
-  "latest_version": "v1.0.8",
-  "default": "v1.0.8",
+  "latest": "1.0.9",
+  "latest_version": "v1.0.9",
+  "default": "v1.0.9",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.8/WeComHub-1.0.8.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.9/WeComHub-1.0.9.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.0.9",
+      "label": "WeComHub v1.0.9：修复通知完全失效（变量未 export）",
+      "channel": "latest",
+      "released_at": "2026-10-02",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.0.8",
       "label": "WeComHub v1.0.8：中文化、图标补全与指令鉴权修复",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-02",
       "notify": true,
       "cmd": true

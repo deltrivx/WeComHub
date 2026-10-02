@@ -8,6 +8,9 @@ TITLE="$SUBJECT"
 MESSAGE="$DESCRIPTION"
 ############
 
+# 变量必须 export：本文件用 exec 调用程序本体，未导出的 shell 变量不会传递过去。
+export RELAY_HOST RELAY_PORT RELAY_PUSH_TOKEN MIN_IMPORTANCE TITLE MESSAGE
+
 ############
 # WeComHub notification agent (configuration half).
 #
