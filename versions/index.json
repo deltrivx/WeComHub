@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.0.6",
-  "latest_version": "v1.0.6",
-  "default": "v1.0.6",
+  "latest": "1.0.7",
+  "latest_version": "v1.0.7",
+  "default": "v1.0.7",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.6/WeComHub-1.0.6.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.7/WeComHub-1.0.7.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.0.7",
+      "label": "WeComHub v1.0.7：旧版升级自愈，消除 {0} 报错",
+      "channel": "latest",
+      "released_at": "2026-10-02",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.0.6",
       "label": "WeComHub v1.0.6：程序与配置解耦，升级不再丢配置",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-02",
       "notify": true,
       "cmd": true
