@@ -1,19 +1,29 @@
 # Releases
 
-## v1.0.1（契约对齐 + 通知代理接入）
+## v1.0.3（插件页描述、restart 通配、rc 修复）
+
+- 新增 `plugins/WeComHub/README.md`，修复 Unraid 插件页「描述」列空白（该列读 README.md，不读 plg 内的 CHANGES）
+- `RESTART_ALLOW_PREFIX` 支持 `*` 通配，允许重启任意容器，无需逐个配置
+- 修复 `rc.WeComHub` 在 busybox `date` 下日志时间戳空白
+- 修复 `rc.WeComHub` 启动时与旧实例抢 8181 端口
+
+## v1.0.2（通知代理接入）
 
 - 新增通知代理定义 `agents/WeComHub.xml`，安装后出现在 **设置 → 通知 → 通知代理**，与内置代理同一入口
+- 修复 `verify-release.sh` 占位符正则不识别含数字的键名
+- 修复 txz 目录校验因 `grep -q` 触发 SIGPIPE 导致的误报
+
+## v1.0.1（契约对齐）
+
 - 指令服务固定 `POST /exec`，统一返回 JSON `{"ok", "result"}`
 - 指令支持中文别名（状态/磁盘/温度/阵列/重启 X）
-- 「允许重启的容器名前缀」可在设置页配置，留空即禁用 restart
-- 未配置令牌时指令服务 fail closed
 - 新增阵列启动事件钩子，保证开机自启（`rc.M` 不遍历 `/etc/rc.d/rc.*`）
-- 补全卸载清理；修复版本索引与更新检查的字段名不一致
+- 补全卸载清理；未配置令牌时指令服务 fail closed
+- 修复版本索引与更新检查的字段名不一致
 
 ## v1.0.0（初始版本）
 
-- 初始版本：把两套散落脚本合并为标准插件
+- 把两套散落脚本合并为标准插件
 - 系统通知经中转转发至企业微信
 - 内置本地指令服务，接收企微反向调用
-- 不依赖 `/boot/config/go` 兜底
 - 所有归档由 GitHub Actions 云端构建

@@ -2,6 +2,29 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.0.3] - 2026-10-02
+
+修复
+
+- **插件页描述为空**：Unraid 插件管理器的「描述」列读的是 `plugins/<name>/README.md`，不是 plg 里的 `<CHANGES>`。之前没有这个文件，页面上只显示插件名。已新增并在构建时部署。
+- **`rc.WeComHub` 日志时间戳空白**：`date +%F %T` 在 Unraid 的 busybox `date` 下会报 `extra operand`。改为 `+%Y-%m-%d %H:%M:%S`。
+- **启动时抢 8181 端口**：旧实例尚未退出时会 `Address already in use`。启动前先回收旧进程并等待其退出。
+
+新增
+
+- **`restart` 支持 `*` 通配**：`RESTART_ALLOW_PREFIX` 设为 `*` 时允许重启任意容器，无需逐个配置。授权规则现为：空=禁用，`*`=任意，其他=前缀匹配。
+
+## [1.0.2] - 2026-10-02
+
+新增
+
+- **通知代理定义**（`agents/WeComHub.xml`）：安装后出现在 `设置 → 通知 → 通知代理`，与内置代理同一入口，可填写变量并使用 Test 按钮。
+
+修复
+
+- 修复 `verify-release.sh` 的占位符正则不识别含数字的键名（如 `MD5_AGENTXML`）。
+- 修复 txz 目录校验因 `grep -q` 提前退出触发 SIGPIPE（141）导致的误报。
+
 ## [1.0.1] - 2026-10-02
 
 修复
@@ -28,7 +51,6 @@
 
 - **通知代理定义**（`agents/WeComHub.xml`）：安装后出现在 `设置 → 通知 → 通知代理`，与内置代理同一入口，可填写变量并使用页面上的 Test 按钮。
 - `WeComHub.page`：插件自身的配置页（中转地址、端口、推送令牌、本地指令端口、最低通知级别）。
-- `wecom-hub-save.php`：把表单写入 `/boot/config/plugins/WeComHub/wecom.hub.cfg`；令牌留空时保持原值不变。
 - `wecom-hub-notify-agent.sh`：把 Unraid 系统通知经中转服务转发到企业微信，支持 `IMPORTANCE` 分级过滤，发送失败静默退出。
 - `wecom-hub-cmd.py`：本地指令服务，监听 `LOCAL_CMD_PORT`，执行白名单只读查询，令牌使用常量时间比较。
 - `scripts/rc.WeComHub`：常驻服务的启停脚本，**不依赖 `/boot/config/go`**。
@@ -50,5 +72,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.0.3]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.3
+[1.0.2]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.2
 [1.0.1]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.1
 [1.0.0]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.0

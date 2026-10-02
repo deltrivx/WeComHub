@@ -18,10 +18,21 @@
 
   <CHANGES>
 ### {VERSION}
-- 设置 → 通知 UI 配置入口
+- 设置 → 通知 → 通知代理 可视化配置入口
 - 系统通知经中转转发至企业微信
 - 内置本地指令服务，接收企微反向调用
 - 阵列启动钩子开机自启，不再依赖 /boot/config/go
+- 插件页显示完整描述
+
+### 1.0.3
+- 新增 plugins/WeComHub/README.md，修复插件页「描述」列空白
+- RESTART_ALLOW_PREFIX 支持 * 通配，允许重启任意容器，无需逐个配置
+- 修复 rc.WeComHub 在 busybox date 下日志时间戳空白
+- 修复 rc.WeComHub 启动时与旧实例抢 8181 端口
+
+### 1.0.2
+- 新增通知代理定义 agents/WeComHub.xml
+- 修复 verify-release.sh 占位符正则与 txz 目录校验误报
 
 ### 1.0.1
 - 通知 payload 对齐现役中转侧（token + text 核心字段）

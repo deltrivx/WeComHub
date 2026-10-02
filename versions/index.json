@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.0.2",
-  "latest_version": "v1.0.2",
-  "default": "v1.0.2",
+  "latest": "1.0.3",
+  "latest_version": "v1.0.3",
+  "default": "v1.0.3",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.2/WeComHub-1.0.2.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.0.3/WeComHub-1.0.3.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.0.3",
+      "label": "WeComHub v1.0.3：插件页描述、restart 通配与 rc 修复",
+      "channel": "latest",
+      "released_at": "2026-10-02",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.0.2",
       "label": "WeComHub v1.0.2：接入官方通知代理体系",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-02",
       "notify": true,
       "cmd": true
