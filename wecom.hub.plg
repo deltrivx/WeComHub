@@ -24,6 +24,11 @@
 - 阵列启动钩子开机自启，不再依赖 /boot/config/go
 - 插件页显示完整描述
 
+### 1.0.8
+- 修复指令服务鉴权失败（403），令牌改从通知代理配置读取
+- 补全通知代理页面图标
+- 通知正文与变量标签中文化
+
 ### 1.0.7
 - 旧版升级自愈：检测到遗留 {0} 格式的 agent 文件时自动重建
 - 安装钩子改用插件内模板作为生成源，消除双份维护
@@ -96,6 +101,11 @@
   <FILE Name="/usr/local/emhttp/plugins/&name;/README.md" Mode="0644">
     <URL>&gitURL;README.plugin.md</URL>
     <MD5>{MD5_README}</MD5>
+  </FILE>
+  <!-- 通知代理图标：NotificationAgents.page 读取 plugins/dynamix/icons/<小写名>.png -->
+  <FILE Name="/usr/local/emhttp/plugins/dynamix/icons/wecomhub.png" Mode="0644">
+    <URL>&gitURL;assets/icon-wecomhub.png</URL>
+    <MD5>{MD5_ICON}</MD5>
   </FILE>
   <!-- 通知代理定义：安装后出現在 设置 → 通知 → 通知代理，可在页面内填写并测试 -->
   <FILE Name="/usr/local/emhttp/plugins/dynamix/agents/&name;.xml" Mode="0644">

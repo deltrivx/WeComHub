@@ -27,6 +27,10 @@ for f in "$NAME.css" "$NAME.js"; do
 done
 # 通知代理定义：dynamix 扫描 agents/*.xml 后渲染到 设置 → 通知 → 通知代理
 [ -d "$ROOT/agents" ] && cp -a "$ROOT/agents" "$STAGE/agents"
+# 通知代理图标：48x48 PNG，页面按 <小写名>.png 查找
+[ -f "$ROOT/assets/icon-wecomhub.png" ] && cp "$ROOT/assets/icon-wecomhub.png" "$STAGE/" && \
+  mv "$STAGE/icon-wecomhub.png" "$STAGE/wecomhub.png"
+
 # 插件页描述：Unraid 插件管理器读取 plugins/<name>/README.md 作为「描述」列
 [ -f "$ROOT/README.plugin.md" ] && cp "$ROOT/README.plugin.md" "$STAGE/README.md"
 # 脚本目录（开机钩子、rc 脚本等，供 plg 安装钩子调用）
@@ -47,7 +51,7 @@ md5_of() { [ -f "$1" ] && md5sum "$1" | awk '{print $1}' || echo ''; }
 OUT="$DIST/wecom.hub.plg"
 cp "$ROOT/wecom.hub.plg" "$OUT"
 sed -i "s/{VERSION}/$VER/g" "$OUT"
-for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTSH MD5_AGENTTMPL MD5_EVENT MD5_AGENTXML MD5_README; do
+for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTSH MD5_AGENTTMPL MD5_EVENT MD5_AGENTXML MD5_README MD5_ICON; do
   case "$k" in
     MD5_PAGE)    v="$(md5_of "$STAGE/$NAME.page")" ;;
     MD5_CSS)     v="$(md5_of "$STAGE/assets/$NAME.css")" ;;
@@ -62,6 +66,7 @@ for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD
     MD5_EVENT)   v="$(md5_of "$ROOT/scripts/event-started.sh")" ;;
     MD5_AGENTXML) v="$(md5_of "$STAGE/agents/$NAME.xml")" ;;
     MD5_README)  v="$(md5_of "$STAGE/README.md")" ;;
+    MD5_ICON)   v="$(md5_of "$STAGE/wecomhub.png")" ;;
   esac
   sed -i "s/{$k}/${v}/g" "$OUT"
 done

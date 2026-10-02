@@ -100,14 +100,14 @@ message = os.environ.get("WH_MESSAGE", "")
 # Keep the payload contract compatible with the relay: token + text is the core
 # pair (text is the rendered markdown body). The remaining fields are optional
 # extensions the relay may ignore.
-text = "[%s Notification]\n> Event: %s\n> Importance: %s\n\n**Subject:** %s" % (
+text = "【%s 通知】\n> 事件：%s\n> 重要性：%s\n\n**标题：** %s" % (
     hostname or "Unraid", event, imp, title)
 if message:
-    text += "\n\n**Details:**\n" + message
+    text += "\n\n**详情：**\n" + message
 if content and content != message:
     text += "\n\n" + content
 if link:
-    text += "\n\n[Details](%s)" % link
+    text += "\n\n[查看详情](%s)" % link
 
 payload = {
     "token": token,

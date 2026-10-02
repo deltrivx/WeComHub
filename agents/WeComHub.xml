@@ -2,12 +2,12 @@
   <Agent>
     <Name>WeComHub</Name>
     <Variables>
-      <Variable Help="Relay service host. WeCom only accepts API calls from IPs on the corporate trusted-IP allowlist, so notifications are handed to a relay with a fixed public IP. Enter your own domain or IP." Desc="Relay Host" Default="RELAY_HOST">RELAY_HOST</Variable>
-      <Variable Help="Relay service port. Default is 8181." Desc="Relay Port" Default="8181">RELAY_PORT</Variable>
-      <Variable Help="Shared push token used to authenticate with the relay. Enter the token configured on your relay service." Desc="Push Token" Default="RELAY_PUSH_TOKEN">RELAY_PUSH_TOKEN</Variable>
-      <Variable Help="Lowest notification level to forward: normal sends everything, warning sends warnings and alerts, alert sends alerts only." Desc="Minimum Importance" Default="normal">MIN_IMPORTANCE</Variable>
-      <Variable Help="Specify the fields which are included in the title of the notification." Desc="Notification Title" Default="$SUBJECT">TITLE</Variable>
-      <Variable Help="Specify the fields which are included in the message body of the notification." Desc="Notification Message" Default="$DESCRIPTION">MESSAGE</Variable>
+      <Variable Help="中转服务地址。企业微信只接受「企业可信 IP」白名单内的调用，因此通知交给一台公网中转代发。请填写你自己的域名或 IP。" Desc="中转地址" Default="RELAY_HOST">RELAY_HOST</Variable>
+      <Variable Help="中转服务端口，默认 8181。" Desc="中转端口" Default="8181">RELAY_PORT</Variable>
+      <Variable Help="与中转服务共享的推送令牌，用于鉴权。请填写你在中转侧配置的值。" Desc="推送令牌" Default="RELAY_PUSH_TOKEN">RELAY_PUSH_TOKEN</Variable>
+      <Variable Help="最低通知级别：normal 全部转发，warning 仅警告及以上，alert 仅严重。" Desc="最低通知级别" Default="normal">MIN_IMPORTANCE</Variable>
+      <Variable Help="选择通知标题包含哪些字段。" Desc="通知标题 title" Default="$SUBJECT">TITLE</Variable>
+      <Variable Help="选择通知正文包含哪些字段。" Desc="通知正文 message" Default="$DESCRIPTION">MESSAGE</Variable>
     </Variables>
     <Script>
       <![CDATA[

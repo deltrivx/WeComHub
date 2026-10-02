@@ -2,6 +2,18 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.0.8] - 2026-10-02
+
+修复
+
+- **指令服务鉴权失败（403）**：v1.0.5 把令牌从 cfg 移除后，`wecom-hub-cmd.py` 仍只从 cfg 读令牌，而 cfg 里已没有令牌，导致所有指令返回 403。现在指令侧改为优先读取通知代理配置文件（用户实际填写处）的变量块，cfg 仅作兼容回退。
+- **通知代理页面左上角图标缺失**：页面按 `plugins/dynamix/icons/<小写名>.png` 查找图标，插件未提供该文件。现新增 48x48 PNG 并随插件部署。
+
+变更
+
+- **通知正文与变量标签中文化**：推送到企业微信的正文改为中文（事件/重要性/标题/详情）；通知代理页面的变量名、说明文字改为中文。脚本内部注释仍保持英文，避免 shell 把中文当命令执行（v1.0.5 修复过的问题）。
+- `RESTART_ALLOW_PREFIX` 等指令侧配置仍在插件页，与通知侧互不重叠。
+
 ## [1.0.7] - 2026-10-02
 
 修复
@@ -104,6 +116,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.0.8]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.8
 [1.0.7]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.7
 [1.0.6]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.6
 [1.0.5]: https://github.com/deltrivx/WeComHub/releases/tag/v1.0.5

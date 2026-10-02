@@ -21,12 +21,16 @@
 """
 import json
 import os
+import re
 import subprocess
 import time
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 CFG = "/boot/config/plugins/WeComHub/wecom.hub.cfg"
+# 通知代理配置文件：用户在「设置 → 通知 → 通知代理 → WeComHub」填写的值存在这里的变量块，
+# 是全插件凭据的唯一来源。指令侧也从这里取令牌，避免两处各填一份。
+AGENT_CONF = "/boot/config/plugins/dynamix/notifications/agents/WeComHub.sh"
 PORT = int(os.environ.get("LOCAL_CMD_PORT", "8181"))
 TOKEN = os.environ.get("RELAY_PUSH_TOKEN", "")
 
@@ -57,6 +61,30 @@ RESTART_ALLOW_PREFIX = os.environ.get("RESTART_ALLOW_PREFIX", "")
 
 # 通配值：配置为该值时允许重启任意容器（显式选择，不是默认值）
 RESTART_ALLOW_ALL = "*"
+
+
+def is_placeholder(v: str) -> bool:
+    """占位默认值视为未配置。"""
+    return v.strip() in ("", "RELAY_PUSH_TOKEN", "RELAY_HOST")
+
+
+def agent_var(key: str) -> str:
+    """从通知代理配置文件的变量块读取一个值（页面 Apply 写入 ####...#### 之间）。"""
+    try:
+        with open(AGENT_CONF, encoding="utf-8", errors="ignore") as fh:
+            text = fh.read()
+    except OSError:
+        return ""
+    m = re.search(r"[#]{6,100}(.*?)[#]{6,100}", text, re.S)
+    if not m:
+        return ""
+    for line in m.group(1).splitlines():
+        if "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        if k.strip() == key:
+            return v.strip().strip('"').strip("'")
+    return ""
 
 
 def constant_time_eq(a: str, b: str) -> bool:
@@ -192,6 +220,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     global PORT, TOKEN, RESTART_ALLOW_PREFIX
+    cfg_token = ""
     if os.path.exists(CFG):
         for line in open(CFG, encoding="utf-8", errors="ignore"):
             line = line.strip()
@@ -200,13 +229,23 @@ def main():
                 if k == "LOCAL_CMD_PORT" and v.isdigit():
                     PORT = int(v)
                 elif k == "RELAY_PUSH_TOKEN":
-                    TOKEN = v
+                    cfg_token = v
                 elif k == "RESTART_ALLOW_PREFIX":
                     RESTART_ALLOW_PREFIX = v
 
+    # 令牌优先取通知代理配置文件（用户填写处），cfg 里的旧值作为兼容回退
+    agent_token = agent_var("RELAY_PUSH_TOKEN")
+    if not is_placeholder(agent_token):
+        TOKEN = agent_token
+    elif not is_placeholder(cfg_token):
+        TOKEN = cfg_token
+    else:
+        TOKEN = ""
+
     if not TOKEN:
-        print("[%s] WARN RELAY_PUSH_TOKEN 未配置，指令服务将拒绝全部请求" % (
-            time.strftime("%Y-%m-%d %H:%M:%S")), flush=True)
+        print("[%s] WARN 未配置推送令牌，指令服务将拒绝全部请求。"
+              "请在「设置 → 通知 → 通知代理 → WeComHub」填写 Push Token 后 Apply。" % (
+                  time.strftime("%Y-%m-%d %H:%M:%S")), flush=True)
 
     print("[%s] WeComHub cmd service on :%d" % (
         time.strftime("%Y-%m-%d %H:%M:%S"), PORT), flush=True)
