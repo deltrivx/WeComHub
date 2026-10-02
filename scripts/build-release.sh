@@ -29,6 +29,11 @@ done
 [ -d "$ROOT/agents" ] && cp -a "$ROOT/agents" "$STAGE/agents"
 # 插件页描述：Unraid 插件管理器读取 plugins/<name>/README.md 作为「描述」列
 [ -f "$ROOT/README.plugin.md" ] && cp "$ROOT/README.plugin.md" "$STAGE/README.md"
+# 脚本目录（开机钩子、rc 脚本等，供 plg 安装钩子调用）
+mkdir -p "$STAGE/scripts"
+for f in "event-started.sh" "rc.$NAME" "notify-agent.sh" "agent-config-template.sh"; do
+  [ -f "$ROOT/scripts/$f" ] && cp "$ROOT/scripts/$f" "$STAGE/scripts/"
+done
 
 # 2) 生成 txz
 PAYLOAD="$WORK/payload"
@@ -42,7 +47,7 @@ md5_of() { [ -f "$1" ] && md5sum "$1" | awk '{print $1}' || echo ''; }
 OUT="$DIST/wecom.hub.plg"
 cp "$ROOT/wecom.hub.plg" "$OUT"
 sed -i "s/{VERSION}/$VER/g" "$OUT"
-for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTSH MD5_EVENT MD5_AGENTXML MD5_README; do
+for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD5_AGENTSH MD5_AGENTTMPL MD5_EVENT MD5_AGENTXML MD5_README; do
   case "$k" in
     MD5_PAGE)    v="$(md5_of "$STAGE/$NAME.page")" ;;
     MD5_CSS)     v="$(md5_of "$STAGE/assets/$NAME.css")" ;;
@@ -53,6 +58,7 @@ for k in MD5_PAGE MD5_CSS MD5_JS MD5_SAVE MD5_UPDATE MD5_AGENT MD5_CMD MD5_RC MD
     MD5_CMD)     v="$(md5_of "$STAGE/wecom-hub-cmd.py")" ;;
     MD5_RC)      v="$(md5_of "$ROOT/scripts/rc.$NAME")" ;;
     MD5_AGENTSH) v="$(md5_of "$ROOT/scripts/notify-agent.sh")" ;;
+    MD5_AGENTTMPL) v="$(md5_of "$ROOT/scripts/agent-config-template.sh")" ;;
     MD5_EVENT)   v="$(md5_of "$ROOT/scripts/event-started.sh")" ;;
     MD5_AGENTXML) v="$(md5_of "$STAGE/agents/$NAME.xml")" ;;
     MD5_README)  v="$(md5_of "$STAGE/README.md")" ;;

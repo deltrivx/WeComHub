@@ -1,6 +1,11 @@
 #!/bin/bash
 ############
-{0}
+RELAY_HOST="RELAY_HOST"
+RELAY_PORT="8181"
+RELAY_PUSH_TOKEN="RELAY_PUSH_TOKEN"
+MIN_IMPORTANCE="normal"
+TITLE="$SUBJECT"
+MESSAGE="$DESCRIPTION"
 ############
 
 ############

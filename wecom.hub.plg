@@ -101,23 +101,80 @@
     <URL>&gitURL;scripts/notify-agent.sh</URL>
     <MD5>{MD5_AGENTSH}</MD5>
   </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/scripts/event-started.sh" Mode="0755">
+    <URL>&gitURL;scripts/event-started.sh</URL>
+    <MD5>{MD5_EVENT}</MD5>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/&name;/scripts/agent-config-template.sh" Mode="0644">
+    <URL>&gitURL;scripts/agent-config-template.sh</URL>
+    <MD5>{MD5_AGENTTMPL}</MD5>
+  </FILE>
   <!-- 开机自启钩子：rc.M 不会遍历 /etc/rc.d/rc.*，故由 array started 事件拉起 -->
   <FILE Name="/usr/local/emhttp/plugins/dynamix/event/started/zz-wecomhub" Mode="0755">
     <URL>&gitURL;scripts/event-started.sh</URL>
     <MD5>{MD5_EVENT}</MD5>
   </FILE>
-  <!-- 安装/移除动作：不依赖 /boot/config/go -->
+  <!-- 安装动作：不依赖 /boot/config/go -->
   <FILE Run="/bin/bash">
   <INLINE>
 mkdir -p /usr/local/emhttp/plugins/&name;
 echo "&version;" > /usr/local/emhttp/plugins/&name;/version
+
+# 通知代理配置文件：仅在不存在时生成（含默认变量块，无 {0}）。
+# 已存在则保留用户配置，因为该文件不在 &lt;FILE&gt; 清单中、不会被升级覆盖。
+AGENT_CONF="/boot/config/plugins/dynamix/notifications/agents/&name;.sh"
+AGENT_BODY="/usr/local/emhttp/plugins/&name;/wecom-hub-notify-agent.sh"
+if [ ! -f "$AGENT_CONF" ]; then
+cat &gt;"$AGENT_CONF" &lt;&lt;'WHCONF'
+#!/bin/bash
+############
+RELAY_HOST="RELAY_HOST"
+RELAY_PORT="8181"
+RELAY_PUSH_TOKEN="RELAY_PUSH_TOKEN"
+MIN_IMPORTANCE="normal"
+TITLE="$SUBJECT"
+MESSAGE="$DESCRIPTION"
+############
+
+############
+# WeComHub notification agent (configuration half).
+#
+# This file holds ONLY your configuration. The implementation lives in
+#   /usr/local/emhttp/plugins/WeComHub/wecom-hub-notify-agent.sh
+# and is updated together with the plugin. Because this file is not managed by
+# the plugin, your settings survive plugin upgrades.
+#
+# Edit the variables through:
+#   Settings -&gt; Notification -&gt; Notification Agents -&gt; WeComHub
+# Do not edit the block above by hand; the page regenerates it on Apply.
+############
+
+AGENT="/usr/local/emhttp/plugins/WeComHub/wecom-hub-notify-agent.sh"
+if [[ -x "$AGENT" ]]; then
+  exec "$AGENT"
+fi
+
+# Plugin body missing: record it instead of failing silently.
+echo "$(date) plugin body not found: $AGENT" &gt;&gt;/var/log/notify_WeComHub
+exit 0
+WHCONF
+  chmod 0755 "$AGENT_CONF"
+fi
+
+# 指令服务开机钩子（若事件目录存在）
+EVENT_DIR="/usr/local/emhttp/plugins/dynamix/event/started"
+if [ -d "$EVENT_DIR" ] &amp;&amp; [ ! -f "$EVENT_DIR/zz-wecomhub" ]; then
+  cp -f "/usr/local/emhttp/plugins/&name;/scripts/event-started.sh" "$EVENT_DIR/zz-wecomhub" 2&gt;/dev/null || true
+  chmod 0755 "$EVENT_DIR/zz-wecomhub" 2&gt;/dev/null || true
+fi
+
 if [ -f /etc/rc.d/rc.&name; ]; then
   /etc/rc.d/rc.&name; restart &gt;/dev/null 2&gt;&amp;1 &amp;
 fi
   </INLINE>
   </FILE>
 
-  <!-- 卸载清理：停止服务并移除部署副本；保留 /boot/config/plugins/&name; 下的用户配置 -->
+  <!-- 卸载清理：停止服务并移除部署副本；保留 /boot/config/plugins/&name;/wecom.hub.cfg 用户配置 -->
   <FILE Run="/bin/bash" Method="remove">
   <INLINE>
 if [ -x /etc/rc.d/rc.&name; ]; then
