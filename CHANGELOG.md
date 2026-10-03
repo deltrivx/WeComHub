@@ -2,6 +2,16 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.4] - 2026-10-03
+
+修复
+
+- **指令回复是英文**：菜单虽然是中文，但 `COMMANDS` 里跑的是裸 shell 命令（`mdcmd status`、`docker ps`、`df -h`、`uptime`、`sensors`），输出自然是英文。现为每条指令增加中文格式化函数（`fmt_status`/`fmt_array`/`fmt_disk`/`fmt_temp`/`fmt_docker`/`fmt_uptime`），回复与菜单语言一致；遇到未覆盖的状态值时保留原文，不丢信息。
+- **通知正文变成模板文案**：旧版在 `SUBJECT`/`DESCRIPTION` 为空时填入 `Notification` / `No description`，而这些**已解析的兜底值**又被快照持久化并还原成配置，导致每条通知都显示假标题假详情、真实内容反而不见。现改为：
+  - 不再编造占位文案，标题退到 `EVENT`（有意义）、正文退到 `CONTENT`；
+  - 快照只持久化用户原始值（`RAW_TITLE`/`RAW_MESSAGE`），空值表示“跟随 subject/description”，还原后仍动态解析；
+  - 增加迁移：已有配置中若混入了 `Notification` / `No description`，视为未设置并清空。
+
 ## [1.1.3] - 2026-10-02
 
 新增
@@ -168,6 +178,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.4]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.4
 [1.1.3]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.3
 [1.1.2]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.2
 [1.1.1]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.1

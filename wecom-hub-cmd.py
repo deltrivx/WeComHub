@@ -100,9 +100,139 @@ def sh(cmd: str, timeout: int = 15) -> str:
     try:
         p = subprocess.run(cmd, shell=True, capture_output=True,
                            text=True, timeout=timeout)
-        return (p.stdout or "").strip() or (p.stderr or "").strip() or "(无输出)"
+        return (p.stdout or "").strip() or (p.stderr or "").strip() or ""
     except Exception as e:  # noqa: BLE001
-        return "执行失败: %s" % e
+        return ""
+
+
+def _kv(text: str) -> dict:
+    """把 key=value 形式的命令输出解析成字典。"""
+    d = {}
+    for line in (text or "").splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            d[k.strip()] = v.strip()
+    return d
+
+
+def fmt_status() -> str:
+    d = _kv(sh("mdcmd status | grep -E '^mdState|^mdNumDisks|^mdNumMissing|^mdResync|^mdNumInvalid'"))
+    if not d:
+        return "无法读取阵列状态（mdcmd 无输出）。"
+    state_map = {"STARTED": "已启动", "STOPPED": "已停止",
+                 "NEW_ARRAY": "新阵列", "DISABLED": "已禁用"}
+    lines = ["【阵列与系统状态】"]
+    st = d.get("mdState", "未知")
+    lines.append("阵列状态：%s" % state_map.get(st, st))
+    if "mdNumDisks" in d:
+        lines.append("已安装磁盘：%s 块" % d["mdNumDisks"])
+    if "mdNumMissing" in d:
+        lines.append("缺失磁盘：%s 块" % d["mdNumMissing"])
+    if d.get("mdResync") not in (None, "", "0"):
+        lines.append("正在进行校验/重建：%s" % d["mdResync"])
+    if d.get("mdNumInvalid") not in (None, "", "0"):
+        lines.append("无效磁盘：%s 块" % d["mdNumInvalid"])
+    return "\n".join(lines)
+
+
+def fmt_array() -> str:
+    d = _kv(sh("mdcmd status | grep -E '^mdState|^mdResync|^mdNumInvalid|^sbNumDisks|^mdNumDisabled'"))
+    if not d:
+        return "无法读取阵列健康信息（mdcmd 无输出）。"
+    lines = ["【阵列健康与校验】"]
+    st = d.get("mdState", "未知")
+    state_map = {"STARTED": "已启动", "STOPPED": "已停止",
+                 "NEW_ARRAY": "新阵列", "DISABLED": "已禁用"}
+    lines.append("阵列状态：%s" % state_map.get(st, st))
+    resync = d.get("mdResync", "0")
+    if resync in (None, "", "0"):
+        lines.append("校验状态：未在校验")
+    else:
+        lines.append("校验状态：进行中（%s）" % resync)
+    if "sbNumDisks" in d:
+        lines.append("缓存池磁盘：%s" % d["sbNumDisks"])
+    if "mdNumDisabled" in d:
+        lines.append("禁用磁盘：%s" % d["mdNumDisabled"])
+    if d.get("mdNumInvalid") not in (None, "", "0"):
+        lines.append("无效磁盘：%s" % d["mdNumInvalid"])
+    return "\n".join(lines)
+
+
+def fmt_disk() -> str:
+    out = sh("df -h /mnt/user 2>/dev/null | tail -1")
+    parts = out.split()
+    if len(parts) >= 5:
+        return ("【磁盘使用】\n"
+                "用户共享总容量：%s\n"
+                "已用：%s\n"
+                "可用：%s\n"
+                "使用率：%s" % (parts[1], parts[2], parts[3], parts[4]))
+    return "无法读取磁盘使用情况。"
+
+
+def fmt_temp() -> str:
+    out = sh("sensors 2>/dev/null | head -20")
+    if not out:
+        return "未检测到温度数据（可能未安装 lm_sensors）。"
+    lines = ["【CPU / 核心温度】"]
+    for line in out.splitlines():
+        if "°C" in line:
+            lines.append(line.strip())
+    if len(lines) == 1:
+        lines.append(out.splitlines()[0].strip())
+    return "\n".join(lines[:12])
+
+
+def fmt_docker() -> str:
+    out = sh("docker ps --format '{{.Names}}\t{{.Status}}'")
+    if not out:
+        return "当前没有正在运行的容器。"
+    lines = ["【运行中容器列表】"]
+    for row in out.splitlines():
+        cols = row.split("\t")
+        name = cols[0].strip()
+        status = cols[1].strip() if len(cols) > 1 else ""
+        # 把常见状态译为中文，其余原样保留（避免丢失信息）
+        status_zh = status
+        if status.startswith("Up"):
+            status_zh = "运行中 " + status[2:].strip()
+            if "healthy" in status:
+                status_zh = "运行中（健康）"
+            elif "unhealthy" in status:
+                status_zh = "运行中（不健康）"
+        elif status.startswith("Exited"):
+            status_zh = "已退出 " + status[6:].strip()
+        elif status.startswith("Restarting"):
+            status_zh = "重启中"
+        lines.append("%s：%s" % (name, status_zh))
+    return "\n".join(lines)
+
+
+def fmt_uptime() -> str:
+    out = sh("uptime")
+    if not out:
+        return "无法读取系统运行时间。"
+    text = out
+    if " up " in text:
+        text = text.split(" up ", 1)[1]
+        if "," in text and "load average" in text:
+            up_part, load_part = text.split(",", 1)
+            load_part = load_part.replace("load average:", "平均负载：").strip()
+            return ("【系统运行时间与负载】\n"
+                    "运行时长：%s\n"
+                    "%s" % (up_part.strip(), load_part))
+    return "【系统运行时间与负载】\n" + out
+
+
+# 指令名 -> 中文格式化函数
+FORMATTERS = {
+    "status": fmt_status,
+    "array": fmt_array,
+    "disk": fmt_disk,
+    "temp": fmt_temp,
+    "docker": fmt_docker,
+    "uptime": fmt_uptime,
+}
 
 
 def fmt_help() -> str:
@@ -179,7 +309,14 @@ def dispatch(cmd: str) -> str:
     if key == "help":
         return fmt_help()
     if key in COMMANDS:
-        return sh(COMMANDS[key][1])
+        # 优先走中文格式化，让回复与中文菜单保持一致；
+        # 若某个指令没有对应格式化函数，退回原始 shell 输出（不丢信息）。
+        fmt = FORMATTERS.get(key)
+        if fmt is not None:
+            out = fmt()
+            if out:
+                return out
+        return sh(COMMANDS[key][1]) or "（无输出）"
     return "未知指令: %s\n\n%s" % (raw, fmt_help())
 
 

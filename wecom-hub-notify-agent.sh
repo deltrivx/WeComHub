@@ -26,13 +26,32 @@ SCRIPTNAME=$(basename "$0")
 LOG="/var/log/notify_WeComHub"
 
 # Fill in the environment when run for a quick manual test.
+# Do NOT invent placeholder text for SUBJECT / DESCRIPTION.
+# Old versions filled "Notification" / "No description" here, and those
+# resolved fallbacks then got persisted into the snapshot and restored as if
+# they were real configuration -- so every notification showed fake template
+# text instead of the real content.
 EVENT="${EVENT:-Unraid Status}"
-SUBJECT="${SUBJECT:-Notification}"
-DESCRIPTION="${DESCRIPTION:-No description}"
+SUBJECT="${SUBJECT:-}"
+DESCRIPTION="${DESCRIPTION:-}"
 IMPORTANCE="${IMPORTANCE:-normal}"
 CONTENT="${CONTENT:-}"
 LINK="${LINK:-}"
 HOSTNAME="${HOSTNAME:-$(hostname)}"
+
+# 保存用户原始配置值（未经过任何兜底解析），仅供快照持久化使用。
+# 只有原始值才写进快照；空值表示“跟随 subject/description”，还原后仍动态解析。
+RAW_TITLE="${TITLE:-}"
+RAW_MESSAGE="${MESSAGE:-}"
+
+# 迁移：旧版曾把兜底文案 "Notification" / "No description" 写进配置与快照。
+# 这些不是用户填的真实值，必须视为“未设置”，否则每条通知都显示假标题/假详情。
+if [[ "${RAW_TITLE}" == "Notification" ]]; then
+  RAW_TITLE=""
+fi
+if [[ "${RAW_MESSAGE}" == "No description" ]]; then
+  RAW_MESSAGE=""
+fi
 
 # Turn literal \n sequences into real line breaks.
 if [[ -n "${DESCRIPTION}" ]]; then
@@ -72,8 +91,10 @@ esac
 # Drop any global proxy so the request is not routed through a LAN proxy.
 unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 
-TITLE="${TITLE:-${SUBJECT}}"
-MESSAGE="${MESSAGE:-${DESCRIPTION}}"
+# Fall back to the most informative field available; never fabricate text.
+# Title falls back to EVENT (meaningful), message falls back to CONTENT.
+TITLE="${TITLE:-${SUBJECT:-${EVENT}}}"
+MESSAGE="${MESSAGE:-${DESCRIPTION:-${CONTENT}}}"
 
 # 配置持久化：仅在配置有效时，把当前变量镜像到持久化快照。
 # agent 配置文件（用户在通知代理页填写处）可能被 Delete 删除或丢失；
@@ -87,8 +108,10 @@ mkdir -p "/boot/config/plugins/WeComHub" 2>/dev/null
   printf 'RELAY_PORT=%s\n' "${RELAY_PORT}"
   printf 'RELAY_PUSH_TOKEN=%s\n' "${RELAY_PUSH_TOKEN}"
   printf 'MIN_IMPORTANCE=%s\n' "${MIN_IMPORTANCE}"
-  printf 'TITLE=%s\n' "${TITLE}"
-  printf 'MESSAGE=%s\n' "${MESSAGE}"
+  # Persist only the user's raw values. Empty means "follow subject/description",
+  # so restoring never bakes fallback text into the configuration.
+  printf 'TITLE=%s\n' "${RAW_TITLE}"
+  printf 'MESSAGE=%s\n' "${RAW_MESSAGE}"
 } > "$SNAP" 2>/dev/null
 chmod 0600 "$SNAP" 2>/dev/null
 
