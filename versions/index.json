@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.1.4",
-  "latest_version": "v1.1.4",
-  "default": "v1.1.4",
+  "latest": "1.1.5",
+  "latest_version": "v1.1.5",
+  "default": "v1.1.5",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.4/WeComHub-1.1.4.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.5/WeComHub-1.1.5.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.1.5",
+      "label": "WeComHub v1.1.5：清理旧版写入的兜底文案",
+      "channel": "latest",
+      "released_at": "2026-10-03",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.1.4",
       "label": "WeComHub v1.1.4：指令回复中文化 + 通知兜底不再编造文案",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-03",
       "notify": true,
       "cmd": true

@@ -2,6 +2,12 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.5] - 2026-10-03
+
+修复
+
+- **旧版兜底文案仍残留在配置里**：v1.1.4 修了“不再编造文案”和“快照只存原始值”，但此前已经写进配置文件与快照的 `TITLE=Notification` / `MESSAGE=No description` 不会被自动清除——它们作为显式值优先于动态解析，导致通知依旧显示假标题假详情、真实内容被掩盖。现由 plg 安装钩子执行迁移：识别这两个特定值并清空（视为未设置），其余用户真实值一律不动。
+
 ## [1.1.4] - 2026-10-03
 
 修复
@@ -178,6 +184,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.5]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.5
 [1.1.4]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.4
 [1.1.3]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.3
 [1.1.2]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.2

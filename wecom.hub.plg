@@ -24,6 +24,9 @@
 - 阵列启动钩子开机自启，不再依赖 /boot/config/go
 - 插件页显示完整描述
 
+### 1.1.5
+- 清理旧版写入的 Notification / No description 兜底文案
+
 ### 1.1.4
 - 指令回复中文化
 - 通知兜底不再编造文案，快照只存原始值
@@ -238,6 +241,49 @@ open(p, "w", encoding="utf-8").write(s)
 PYMIG
   chmod 0755 "$AGENT_CONF" 2&gt;/dev/null || true
 fi
+
+# 迁移：清理旧版写入的兜底文案。
+# 早期版本在 SUBJECT/DESCRIPTION 为空时填入 "Notification" / "No description"，
+# 而这些已解析的兜底值又被写进配置与快照。它们不是用户填的真实值，却会作为显式
+# TITLE/MESSAGE 优先于动态解析，导致每条通知都显示假标题假详情、真实内容被掩盖。
+# 这里把这两个特定值视为“未设置”并清空，让用户重新回到跟随 subject/description。
+for F in "$AGENT_CONF" "/boot/config/plugins/&name;/agent-vars.conf"; do
+  [ -f "$F" ] || continue
+  python3 - "$F" &lt;&lt;'PYFALLBACK'
+import sys, re
+p = sys.argv[1]
+s = open(p, encoding="utf-8", errors="ignore").read()
+if "Notification" not in s and "No description" not in s:
+    sys.exit(0)
+m = re.search(r"[#]{6,100}(.*?)[#]{6,100}", s, re.S)
+quoted = bool(m)
+seg = m.group(1) if m else s
+out, changed = [], False
+for line in seg.splitlines():
+    if "=" not in line:
+        out.append(line)
+        continue
+    k, v = line.split("=", 1)
+    k = k.strip()
+    val = v.strip().strip(chr(34)).strip(chr(39))
+    if k == "TITLE" and val == "Notification":
+        val = ""
+        changed = True
+    elif k == "MESSAGE" and val == "No description":
+        val = ""
+        changed = True
+    out.append(k + "=" + (chr(34) + val + chr(34) if quoted else val))
+if not changed:
+    sys.exit(0)
+new_seg = "\n".join(out)
+if quoted:
+    s = s[:m.start(1)] + "\n" + new_seg + "\n" + s[m.end(1):]
+else:
+    s = new_seg + "\n"
+open(p, "w", encoding="utf-8").write(s)
+print("cleaned legacy fallback in %s" % p)
+PYFALLBACK
+done
 
 # 指令服务开机钩子（若事件目录存在）
 EVENT_DIR="/usr/local/emhttp/plugins/dynamix/event/started"
