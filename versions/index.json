@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.1.5",
-  "latest_version": "v1.1.5",
-  "default": "v1.1.5",
+  "latest": "1.1.6",
+  "latest_version": "v1.1.6",
+  "default": "v1.1.6",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.5/WeComHub-1.1.5.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.6/WeComHub-1.1.6.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.1.6",
+      "label": "WeComHub v1.1.6：中转端口在 UI 可见可改，默认 8484 免疫 IP 漂移",
+      "channel": "latest",
+      "released_at": "2026-10-04",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.1.5",
       "label": "WeComHub v1.1.5：清理旧版写入的兜底文案",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-03",
       "notify": true,
       "cmd": true

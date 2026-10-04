@@ -2,6 +2,20 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.6] - 2026-10-04
+
+变更
+
+- **中转端口改为 UI 可见可改，默认值调整为 8484**：此前端口在后台写死为 8181，用户无法在「设置 → 通知 → 通知代理」页面看到或修改它，也无法感知它依赖出口 IP 白名单。现：
+  - 通知代理页面新增/更新「中转端口」项（Describe=中转端口），默认值 `8484`，说明文字写明两种端口的差异；
+  - 程序本体的兜底值同步为 `8484`（仅在页面未填写时生效，UI 一旦填写以 UI 为准）；
+  - 配置模板由 `agents/WeComHub.xml` 单一生成，端口不再散落在多处。
+
+理由
+
+- `8484` 是 VPS 上的 `wecom-api-proxy`，其防火墙规则为 `ALLOW Anywhere`，**不依赖家庭宽带出口 IP**；而 `8181` 需要对出口 IP 逐一放行，宽带拨号换 IP 后通知会静默失败（10/4 已实际发生）。
+- 用户仍可在 UI 改回 `8181`（若其中转服务直接监听该端口），选择权在前端而非后台硬编码。
+
 ## [1.1.5] - 2026-10-03
 
 修复
@@ -184,6 +198,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.6]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.6
 [1.1.5]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.5
 [1.1.4]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.4
 [1.1.3]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.3

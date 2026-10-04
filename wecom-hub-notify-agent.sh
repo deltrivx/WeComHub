@@ -66,7 +66,9 @@ if [[ -n "${CONTENT}" ]]; then
 fi
 
 RELAY_HOST="${RELAY_HOST:-}"
-RELAY_PORT="${RELAY_PORT:-8181}"
+# 默认 8484 = VPS 上的 wecom-api-proxy（防火墙对所有来源开放，免疫出口 IP 漂移）。
+# 仅当通知代理页未填写该值时兜底；用户一旦在 UI 填写，以 UI 值为准。
+RELAY_PORT="${RELAY_PORT:-8484}"
 RELAY_PUSH_TOKEN="${RELAY_PUSH_TOKEN:-}"
 MIN_IMPORTANCE="${MIN_IMPORTANCE:-normal}"
 

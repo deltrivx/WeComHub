@@ -3,7 +3,7 @@
     <Name>WeComHub</Name>
     <Variables>
       <Variable Help="中转服务地址。企业微信只接受「企业可信 IP」白名单内的调用，因此通知交给一台公网中转代发。请填写你自己的域名或 IP。" Desc="中转地址" Default="RELAY_HOST">RELAY_HOST</Variable>
-      <Variable Help="中转服务端口，默认 8181。" Desc="中转端口" Default="8181">RELAY_PORT</Variable>
+      <Variable Help="中转服务端口。默认 8484 —— 该端口是 VPS 上的 wecom-api-proxy，防火墙对所有来源开放，因此不受家庭宽带出口 IP 漂移影响；若你的中转服务直接监听 8181，也可填 8181（但需在防火墙放行你的出口 IP）。" Desc="中转端口" Default="8484">RELAY_PORT</Variable>
       <Variable Help="与中转服务共享的推送令牌，用于鉴权。请填写你在中转侧配置的值。" Desc="推送令牌" Default="RELAY_PUSH_TOKEN">RELAY_PUSH_TOKEN</Variable>
       <Variable Help="最低通知级别：normal 全部转发，warning 仅警告及以上，alert 仅严重。" Desc="最低通知级别" Default="normal">MIN_IMPORTANCE</Variable>
       <Variable Help="选择通知标题包含哪些字段。" Desc="通知标题 title" Default="$SUBJECT">TITLE</Variable>
