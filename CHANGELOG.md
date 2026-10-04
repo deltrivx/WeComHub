@@ -2,6 +2,14 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.8] - 2026-10-04
+
+修复
+
+- **直通盘/空槽被误报为磁盘故障**：`mdNumInvalid` / `mdNumDisabled` 会把 NVMe 直通盘与未使用的空槽位一并计数。v1.1.4 中文化的 `status` / `array` 指令把「无效磁盘：2 块」展示出来，导致用户误以为磁盘有问题。
+  - 旧版 `unraid_cmd.py` 源码注释已明确说明该计数属正常现象、不应告警，只有 `mdNumMissing`（真正缺失）才是故障信号；本次回归到这一正确行为。
+  - 现在 `状态` 仅展示阵列状态、已安装磁盘、缺失磁盘；`阵列` 仅展示状态、校验情况、缓存池磁盘、禁用磁盘。
+
 ## [1.1.7] - 2026-10-04
 
 新增
@@ -210,6 +218,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.8]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.8
 [1.1.7]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.7
 [1.1.6]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.6
 [1.1.5]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.5

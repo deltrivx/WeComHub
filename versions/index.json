@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.1.7",
-  "latest_version": "v1.1.7",
-  "default": "v1.1.7",
+  "latest": "1.1.8",
+  "latest_version": "v1.1.8",
+  "default": "v1.1.8",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.7/WeComHub-1.1.7.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.8/WeComHub-1.1.8.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.1.8",
+      "label": "WeComHub v1.1.8：不再把直通盘/空槽误报为磁盘故障",
+      "channel": "latest",
+      "released_at": "2026-10-04",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.1.7",
       "label": "WeComHub v1.1.7：配置保存即生效（热加载）",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-04",
       "notify": true,
       "cmd": true
