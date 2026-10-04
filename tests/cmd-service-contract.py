@@ -74,9 +74,13 @@ class FakeHandler:
 
 
 def run(mod, token, cmd=None, path="/exec", arg=None, prefix=""):
-    """执行一次 do_POST，返回 (code, parsed_json_or_None, raw_body)。"""
-    mod.TOKEN = token
-    mod.RESTART_ALLOW_PREFIX = prefix
+    """执行一次 do_POST，返回 (code, parsed_json_or_None, raw_body)。
+
+    服务现在支持配置热加载：do_POST 每次请求都会调用 apply_config() 重新读盘。
+    因此这里不能直接给 mod.TOKEN 赋值（会被重载覆盖），而要把 load_config
+    打桩成"磁盘上就是这组配置"，这样既测到热加载路径，又不依赖真实文件。
+    """
+    mod.load_config = lambda token=token, prefix=prefix: (8181, token, prefix)
     body = {"token": token}
     if cmd is not None:
         body["cmd"] = cmd

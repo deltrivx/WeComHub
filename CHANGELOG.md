@@ -2,6 +2,18 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.7] - 2026-10-04
+
+新增
+
+- **配置保存即生效（热加载）**：此前修改端口、令牌或重启前缀后，必须手动重启指令服务才生效。现改为每次请求都重新读盘加载配置：
+  - 令牌 / 重启前缀**立即生效**；
+  - 端口变更时自动重新监听（无需手动重启）。
+
+修复
+
+- 修复热加载引入的契约测试回归（测试直接改全局变量会被重载覆盖，改为对 `load_config` 打桩，适配热加载设计）。
+
 ## [1.1.6] - 2026-10-04
 
 变更
@@ -198,6 +210,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.7]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.7
 [1.1.6]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.6
 [1.1.5]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.5
 [1.1.4]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.4

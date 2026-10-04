@@ -1,17 +1,25 @@
 {
   "schema": 1,
   "name": "WeComHub",
-  "latest": "1.1.6",
-  "latest_version": "v1.1.6",
-  "default": "v1.1.6",
+  "latest": "1.1.7",
+  "latest_version": "v1.1.7",
+  "default": "v1.1.7",
   "updatedAt": "2026-10-02T00:00:00Z",
-  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.6/WeComHub-1.1.6.txz",
+  "downloadUrl": "https://github.com/deltrivx/WeComHub/releases/download/v1.1.7/WeComHub-1.1.7.txz",
   "pluginUrl": "https://raw.githubusercontent.com/deltrivx/WeComHub/main/wecom.hub.plg",
   "versions": [
     {
+      "id": "v1.1.7",
+      "label": "WeComHub v1.1.7：配置保存即生效（热加载）",
+      "channel": "latest",
+      "released_at": "2026-10-04",
+      "notify": true,
+      "cmd": true
+    },
+    {
       "id": "v1.1.6",
       "label": "WeComHub v1.1.6：中转端口在 UI 可见可改，默认 8484 免疫 IP 漂移",
-      "channel": "latest",
+      "channel": "stable",
       "released_at": "2026-10-04",
       "notify": true,
       "cmd": true

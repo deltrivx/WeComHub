@@ -339,6 +339,9 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(404, {"ok": False, "err": "not found"})
             return
 
+        # 每次请求都重新读盘加载配置：UI 保存后无需重启即生效
+        apply_config()
+
         try:
             n = int(self.headers.get("Content-Length") or 0)
             raw = self.rfile.read(n) if n else b""
@@ -355,38 +358,74 @@ class Handler(BaseHTTPRequestHandler):
         self._send_json(200, {"ok": True, "result": dispatch(data.get("cmd", ""))})
 
 
-def main():
-    global PORT, TOKEN, RESTART_ALLOW_PREFIX
-    cfg_token = ""
+def load_config():
+    """读取当前生效配置：插件 cfg + 通知代理配置文件（后者优先）。
+
+    每次调用都重新读盘，因此 UI 保存后无需重启服务即可生效。
+    返回 (port, token, restart_prefix)。
+    """
+    cfg = {}
     if os.path.exists(CFG):
         for line in open(CFG, encoding="utf-8", errors="ignore"):
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
-                if k == "LOCAL_CMD_PORT" and v.isdigit():
-                    PORT = int(v)
-                elif k == "RELAY_PUSH_TOKEN":
-                    cfg_token = v
-                elif k == "RESTART_ALLOW_PREFIX":
-                    RESTART_ALLOW_PREFIX = v
+                cfg[k] = v
 
-    # 令牌优先取通知代理配置文件（用户填写处），cfg 里的旧值作为兼容回退
+    port = PORT
+    if cfg.get("LOCAL_CMD_PORT", "").isdigit():
+        port = int(cfg["LOCAL_CMD_PORT"])
+    prefix = cfg.get("RESTART_ALLOW_PREFIX", RESTART_ALLOW_PREFIX)
+
+    # 令牌：优先通知代理页填写处，cfg 里的旧值作为兼容回退
     agent_token = agent_var("RELAY_PUSH_TOKEN")
+    cfg_token = cfg.get("RELAY_PUSH_TOKEN", "")
     if not is_placeholder(agent_token):
-        TOKEN = agent_token
+        token = agent_token
     elif not is_placeholder(cfg_token):
-        TOKEN = cfg_token
+        token = cfg_token
     else:
-        TOKEN = ""
+        token = ""
+    return port, token, prefix
 
+
+def apply_config():
+    """把最新配置应用到全局，返回 (port, token, prefix)。"""
+    global PORT, TOKEN, RESTART_ALLOW_PREFIX
+    PORT, TOKEN, RESTART_ALLOW_PREFIX = load_config()
+    return PORT, TOKEN, RESTART_ALLOW_PREFIX
+
+
+def main():
+    apply_config()
     if not TOKEN:
         print("[%s] WARN 未配置推送令牌，指令服务将拒绝全部请求。"
               "请在「设置 → 通知 → 通知代理 → WeComHub」填写 Push Token 后 Apply。" % (
                   time.strftime("%Y-%m-%d %H:%M:%S")), flush=True)
 
-    print("[%s] WeComHub cmd service on :%d" % (
-        time.strftime("%Y-%m-%d %H:%M:%S"), PORT), flush=True)
-    HTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
+    # 逐个请求处理（而非 serve_forever），这样每轮都能重新读配置：
+    # 令牌 / 重启前缀立即生效；端口变更时自动重新监听，无需手动重启。
+    server = None
+    bound_port = None
+    while True:
+        port, _, _ = apply_config()
+        if server is None or port != bound_port:
+            if server is not None:
+                server.server_close()
+                print("[%s] 端口变更 %s -> %s，已重新监听" % (
+                    time.strftime("%Y-%m-%d %H:%M:%S"), bound_port, port), flush=True)
+            try:
+                server = HTTPServer(("0.0.0.0", port), Handler)
+            except OSError as e:
+                print("[%s] 监听端口 %s 失败: %s" % (
+                    time.strftime("%Y-%m-%d %H:%M:%S"), port, e), flush=True)
+                if server is None:
+                    raise
+                continue
+            bound_port = port
+            print("[%s] WeComHub cmd service on :%d" % (
+                time.strftime("%Y-%m-%d %H:%M:%S"), port), flush=True)
+        server.handle_request()
 
 
 if __name__ == "__main__":
