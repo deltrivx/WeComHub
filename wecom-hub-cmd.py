@@ -130,8 +130,9 @@ def fmt_status() -> str:
         lines.append("缺失磁盘：%s 块" % d["mdNumMissing"])
     if d.get("mdResync") not in (None, "", "0"):
         lines.append("正在进行校验/重建：%s" % d["mdResync"])
-    if d.get("mdNumInvalid") not in (None, "", "0"):
-        lines.append("无效磁盘：%s 块" % d["mdNumInvalid"])
+    # 注意：mdNumInvalid / mdNumDisabled 会把 NVMe 直通盘与空槽位一并计数，
+    # 属正常现象（旧版 unraid_cmd.py 亦明确不作告警）。只有真正「缺失」
+    # (mdNumMissing) 才是故障信号，因此这里不展示无效/禁用计数。
     return "\n".join(lines)
 
 
@@ -153,8 +154,7 @@ def fmt_array() -> str:
         lines.append("缓存池磁盘：%s" % d["sbNumDisks"])
     if "mdNumDisabled" in d:
         lines.append("禁用磁盘：%s" % d["mdNumDisabled"])
-    if d.get("mdNumInvalid") not in (None, "", "0"):
-        lines.append("无效磁盘：%s" % d["mdNumInvalid"])
+    # 同上：不展示 mdNumInvalid / mdNumDisabled，避免把直通盘与空槽误报成故障
     return "\n".join(lines)
 
 
