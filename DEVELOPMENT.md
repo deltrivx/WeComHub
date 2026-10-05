@@ -177,3 +177,35 @@ ls /etc/*.bak-rotate-*
 
 另外：Git 历史也要扫。判断某段 40 位十六进制是不是真泄漏时，注意它可能是 commit SHA（本身即 40 位十六进制），
 要用 `git log -S <真实值>` 精确比对，避免误报。
+
+### 11. 打包为 txz 后必须自己管权限与属主
+
+改动的核心是把 13 个逐个下载的 `<FILE>` 合并成**单个 txz**（持久化到闪存），
+开机由 `upgradepkg` 本地解包还原 `/usr`，从而**不依赖网络**。
+
+机制（已读 dynamix `plugin` 源码确证）：文件已存在时 plugin-manager 只打印
+`skipping: ... already exists`，但**仍会执行** `Run` 属性里的命令。
+所以“跳过下载”不等于“跳过解包”，这正是离线安装能成立的关键。
+
+踩到的坑：
+
+- **`<FILE Mode="0755">` 失效**：原先每个 FILE 靠 Mode 属性施加权限，改 txz 后这层也没了。
+  tar 会把构建机的文件模式与 uid 原样带进包里，真机解包后 `rc.WeComHub` 变成
+  `-rw-------` 且属主 `UNKNOWN:UNKNOWN`，执行直接 Permission denied。
+  必须在打包前显式 chmod，并用 `tar --owner=0 --group=0` 强制归 root。
+- **同版本会被跳过解包**：`upgradepkg --install-new` 在登记仍在时打印
+  `Skipping package (already installed)` 且**不解包**。此时若 `/usr` 已被清空就再也回不来。
+  必须加 `--reinstall` 强制重装同版本。
+- **XML 注释里不能出现连续双横线 `--`**：写 `--reinstall`、`--install-new` 会直接让 XML 解析失败。
+  说明文字里改用空格分隔的写法，或把它挪到 `<CHANGES>` 正文中。
+
+### 12. 校验脚本不要用 grep 统计 XML
+
+曾用 `grep -cE '<URL>'` 统计联网条目数，结果把**注释里的字面量** `<URL>` 也数进去
+（故障说明中正好提到“逐个走 `<URL>` 下载”），计数虚高导致误判。
+必须按 XML 语义解析：
+
+```python
+root = ET.parse(plg).getroot()
+print(sum(1 for f in root.findall("FILE") if f.find("URL") is not None))
+```

@@ -1,0 +1,22 @@
+/* WeComHub 设置页样式（设置 → 通知） */
+.wecomhub { max-width: 900px; margin: 12px; }
+.wecomhub h2 { margin: 0 0 6px; font-size: 18px; }
+.wh-desc { color: #666; margin: 0 0 16px; line-height: 1.6; }
+.wh-note { color: #888; font-size: 12px; margin-top: 12px; }
+
+.wh-table { width: 100%; border-collapse: collapse; }
+.wh-table td { padding: 8px 10px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
+.wh-table td:first-child { width: 160px; font-weight: 600; }
+.wh-table input[type="text"],
+.wh-table input[type="password"],
+.wh-table input[type="number"],
+.wh-table select { padding: 5px 8px; min-width: 220px; }
+.wh-table small { display: block; color: #888; font-size: 12px; margin-top: 3px; }
+
+.wh-actions { margin-top: 16px; }
+.wh-actions button { padding: 7px 16px; margin-right: 8px; cursor: pointer; }
+.wh-save { background: #2a7; color: #fff; border: 1px solid #2a7; }
+.wh-test { background: #f5f5f5; border: 1px solid #ccc; }
+#wh-msg { margin-left: 8px; font-size: 13px; }
+#wh-msg.ok { color: #2a7; }
+#wh-msg.err { color: #c33; }

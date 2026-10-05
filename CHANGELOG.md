@@ -2,6 +2,20 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [1.1.9] - 2026-10-05
+
+修复
+
+- **开机不再依赖网络**：插件此前把 13 个文件逐个走 `<URL>` 下载，`/usr` 又是内存 overlay（重启即失），因此每次开机都必须成功联网重装。2026-10-05 实测故障：开机瞬间网络未稳，`WeComHub.page` 下载失败 → 整个插件被 Unraid 判失败并移入 `plugins-error` → 服务、开机钩子、通知代理全部消失，且**不会自愈**（要等下一次重启才重试）。
+  - 现在改为：整个插件打成单个 `txz`，由 plg 下载到**闪存** `/boot/config/plugins/WeComHub/`，开机时 plugin-manager 校验 MD5 发现文件已存在即跳过下载，**但仍会执行** `Run="upgradepkg --install-new --reinstall"` 本地解包还原 `/usr`。
+  - 这一点已从 dynamix `plugin` 源码确证：文件被 `skipping` 后 `Run` 依旧执行，这正是离线安装能成立的关键。
+
+新增
+
+- **txz 自包含校验**：`verify-release.sh` 现在逐个检查 txz 内是否打包了全部运行时文件（含 `rc.WeComHub`、`dynamix/agents/*.xml`、`icons/*.png`、`event/started/zz-wecomhub`），缺任一个都会让开机后对应功能消失；同时反向校验**不得**打包用户配置文件，避免解包覆盖令牌。
+- **`--reinstall` 防跳过**：同版本登记仍在时 `upgradepkg` 会打印 `Skipping package (already installed)` 而不解包，若此刻 `/usr` 已被清空则文件再也回不来。`--reinstall` 强制重新解包堵死这条路径。
+- **打包权限归一**：改为 txz 后原先每个 `<FILE Mode="0755">` 施加的权限不再生效，tar 会把构建机的模式与 uid 带进包里，实测解包后 `rc.WeComHub` 为 `-rw-------` 属主 `UNKNOWN:UNKNOWN`，直接 Permission denied。现于打包前显式 chmod 并用 `--owner=0 --group=0` 归 root。
+
 ## [1.1.8] - 2026-10-04
 
 修复
@@ -218,6 +232,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[1.1.9]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.9
 [1.1.8]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.8
 [1.1.7]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.7
 [1.1.6]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.6

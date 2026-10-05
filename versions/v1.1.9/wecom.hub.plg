@@ -2,13 +2,13 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "WeComHub">
 <!ENTITY author "deltrivx">
-<!ENTITY version "{VERSION}">
+<!ENTITY version "1.1.9">
 <!ENTITY launch "Settings/Notification">
 <!ENTITY branch "main">
 <!ENTITY gitURL "https://github.com/deltrivx/WeComHub/raw/&branch;/">
 <!ENTITY pluginURL "https://github.com/deltrivx/WeComHub">
 <!ENTITY supportURL "https://github.com/deltrivx/WeComHub/issues">
-<!ENTITY dlURL "https://github.com/deltrivx/&name;/releases/download/v{VERSION}/">
+<!ENTITY dlURL "https://github.com/deltrivx/&name;/releases/download/v1.1.9/">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;"
         pluginURL="&pluginURL;" supportURL="&supportURL;" min="6.9.0" beta="false">
@@ -18,7 +18,7 @@
        所有归档由 GitHub Actions 云端构建，禁止本地打包后上传。 -->
 
   <CHANGES>
-### {VERSION}
+### 1.1.9
 - **离线安装：开机不再依赖网络**。插件改为单个 txz 包持久化到闪存，开机由本地解包还原，
   此前 13 个文件逐个联网下载，网络抖动会让整个插件被移入 plugins-error 并彻底失效且不自愈
 - 用户配置（含令牌）不会被安装或升级覆盖
@@ -120,9 +120,9 @@
        reinstall 强制同版本也重新解包，堵死这条路径。
 
        XML 注意：注释正文内不得出现连续双横线，故此处不写命令行选项原样文字。 -->
-  <FILE Name="/boot/config/plugins/&name;/&name;-{VERSION}.txz" Run="upgradepkg --install-new --reinstall">
-    <URL>&dlURL;&name;-{VERSION}.txz</URL>
-    <MD5>{MD5_TXZ}</MD5>
+  <FILE Name="/boot/config/plugins/&name;/&name;-1.1.9.txz" Run="upgradepkg --install-new --reinstall">
+    <URL>&dlURL;&name;-1.1.9.txz</URL>
+    <MD5>6e9df548a4b29bdcc13d29ad6b34b4ff</MD5>
   </FILE>
 
   <!-- 安装动作：不依赖 /boot/config/go -->

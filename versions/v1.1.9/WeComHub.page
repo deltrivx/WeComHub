@@ -1,0 +1,66 @@
+<?php
+/**
+ * WeComHub 设置页面（入口：设置 → 通知）
+ *
+ * 职责边界（重要）：
+ *   - 通知侧配置（中转地址/端口/令牌/最低级别）由 Unraid 官方
+ *     「设置 → 通知 → 通知代理 → WeComHub」页面管理，写入 agent 脚本的变量块。
+ *   - 本页只管指令侧：是否启用、本地监听端口、允许重启的容器名范围。
+ *
+ * 这样任何设备/用户安装后都只有一处通知配置，不依赖任何预置值。
+ */
+$CFG = '/boot/config/plugins/WeComHub/wecom.hub.cfg';
+
+$current = [];
+if (is_file($CFG)) {
+    foreach (file($CFG, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) { continue; }
+        [$k, $v] = explode('=', $line, 2);
+        $current[$k] = $v;
+    }
+}
+$val = fn($k, $d = '') => htmlspecialchars($current[$k] ?? $d);
+$checked = fn($k, $d = 'yes') => (($current[$k] ?? $d) === 'yes') ? ' checked' : '';
+?>
+<link rel="stylesheet" href="/plugins/WeComHub/assets/WeComHub.css">
+
+<div class="wecomhub">
+  <h2>WeComHub — 企业微信中枢</h2>
+  <p class="wh-desc">
+    本页配置<strong>指令侧</strong>（企业微信发指令给 Unraid）。
+    通知侧的地址、端口与令牌请在
+    <a href="/Settings/NotificationAgents">设置 → 通知 → 通知代理 → WeComHub</a> 中填写。
+  </p>
+
+  <form id="wh-form" method="POST" action="/plugins/WeComHub/wecom-hub-save.php">
+    <table class="wh-table">
+      <tr>
+        <td>启用指令交互</td>
+        <td><input type="checkbox" name="ENABLE_CMD" value="yes"<?= $checked('ENABLE_CMD') ?>>
+          <small>接收企业微信指令并执行只读查询/容器重启</small></td>
+      </tr>
+      <tr>
+        <td>本地指令端口</td>
+        <td><input type="number" name="LOCAL_CMD_PORT" value="<?= $val('LOCAL_CMD_PORT', '8181') ?>" placeholder="LOCAL_CMD_PORT">
+          <small>本地指令服务监听端口，需与中转服务指向的端口一致</small></td>
+      </tr>
+      <tr>
+        <td>允许重启的容器名范围</td>
+        <td><input type="text" name="RESTART_ALLOW_PREFIX" value="<?= $val('RESTART_ALLOW_PREFIX') ?>" placeholder="* = any container">
+          <small>填 <code>*</code> 允许重启任意容器；填前缀（如 <code>Auto</code>）仅允许该前缀；留空则禁用重启</small></td>
+      </tr>
+    </table>
+
+    <div class="wh-actions">
+      <button type="submit" class="wh-save">保存</button>
+      <span id="wh-msg"></span>
+    </div>
+  </form>
+
+  <p class="wh-note">
+    说明：文档与仓库中的地址、端口、令牌均为占位符，请使用你自己的值。
+  </p>
+</div>
+
+<script src="/plugins/WeComHub/assets/WeComHub.js"></script>
