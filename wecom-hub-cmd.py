@@ -617,7 +617,7 @@ def main():
                 server.server_close()
                 log("端口变更 %s -> %s，已重新监听" % (bound_port, port))
             try:
-                server = HTTPServer(("[IP]", port), Handler)
+                server = HTTPServer(("", port), Handler)
             except OSError as e:
                 log("监听端口 %s 失败: %s" % (port, e))
                 if server is None:
