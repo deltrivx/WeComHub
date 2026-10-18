@@ -1,0 +1,315 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN [
+<!ENTITY name "WeComHub">
+<!ENTITY author "deltrivx">
+<!ENTITY version "2.0.0">
+<!ENTITY launch "Settings/Notification">
+<!ENTITY branch "main">
+<!ENTITY gitURL "https://github.com/deltrivx/WeComHub/raw/&branch;/">
+<!ENTITY pluginURL "https://github.com/deltrivx/WeComHub">
+<!ENTITY supportURL "https://github.com/deltrivx/WeComHub/issues">
+<!ENTITY dlURL "https://github.com/deltrivx/&name;/releases/download/v2.0.0/">
+]>
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;"
+        pluginURL="&pluginURL;" supportURL="&supportURL;" min="6.9.0" beta="false">
+
+  <!-- WeComHub：Unraid 企业微信中枢
+       设置 → 通知 可视化配置；系统通知推送企微 + 企微指令反向交互。
+       所有归档由 GitHub Actions 云端构建，禁止本地打包后上传。 -->
+
+  <CHANGES>
+### 2.0.0
+- **入站验签解密自闭环**：内嵌纯 Python AES-256-CBC 与企微协议校验，零外部依赖，摆脱外部中转与 Notify 耦合
+- **UI 全面升级（MoviePilot 风格）**：统一凭据面板、服务状态灯、实时交互日志
+- **快捷动作**：「测试连接」一键发送验证消息、「一键同步菜单」直推企业微信官方自定义菜单
+- **配置收敛与安全**：统一持久化至 `/boot/config/plugins/WeComHub/wecom.hub.cfg`（0600 权限），无缝兼容老版本配置
+
+### 1.1.9
+- **离线安装：开机不再依赖网络**。插件改为单个 txz 包持久化到闪存，开机由本地解包还原，
+  此前 13 个文件逐个联网下载，网络抖动会让整个插件被移入 plugins-error 并彻底失效且不自愈
+- 用户配置（含令牌）不会被安装或升级覆盖
+
+### 1.1.8
+- 不再把直通盘/空槽误报为磁盘故障
+
+### 1.1.7
+- 配置保存即生效（热加载），无需手动重启
+
+### 1.1.6
+- 中转端口在 UI 可见可改，默认 8484（免疫出口 IP 漂移）
+
+### 1.1.5
+- 清理旧版写入的 Notification / No description 兜底文案
+
+### 1.1.4
+- 指令回复中文化
+- 通知兜底不再编造文案，快照只存原始值
+
+### 1.1.3
+- 配置持久化：快照逻辑移至程序本体，可覆盖存量用户
+
+### 1.1.2
+- 配置持久化：误删后重装自动从快照还原
+
+### 1.1.1
+- 修复升级覆盖用户凭据（删除残留 FILE 条目）
+
+### 1.1.0
+- 存量配置文件自动补 export（不影响用户的变量值）
+
+### 1.0.9
+- 修复通知完全失效：变量块后补 export，exec 才会传递变量给程序本体
+
+### 1.0.8
+- 修复指令服务鉴权失败（403），令牌改从通知代理配置读取
+- 补全通知代理页面图标
+- 通知正文与变量标签中文化
+
+### 1.0.7
+- 旧版升级自愈：检测到遗留 {0} 格式的 agent 文件时自动重建
+- 安装钩子改用插件内模板作为生成源，消除双份维护
+
+### 1.0.6
+- 程序与配置解耦：升级插件不再丢失中转地址与令牌
+- 安装时生成 agent 配置文件（含默认值，无 {0}），Test 不再报错
+- 误删 agent 文件后重装可恢复
+
+### 1.0.5
+- agent 脚本注释全英文，修复 Test 按钮报 command not found
+- 通知/指令配置分离，各自只有一个入口
+- 不再预置任何值，任何设备安装后自行填写即可
+
+### 1.0.4
+- 修复通知代理页面读不到配置（部署带变量块的完整脚本）
+- agents/WeComHub.xml 与 scripts/notify-agent.sh 保持单一真相源
+
+### 1.0.3
+- 新增 plugins/WeComHub/README.md，修复插件页「描述」列空白
+- RESTART_ALLOW_PREFIX 支持 * 通配，允许重启任意容器，无需逐个配置
+- 修复 rc.WeComHub 在 busybox date 下日志时间戳空白
+- 修复 rc.WeComHub 启动时与旧实例抢 8181 端口
+
+### 1.0.2
+- 新增通知代理定义 agents/WeComHub.xml
+- 修复 verify-release.sh 占位符正则与 txz 目录校验误报
+
+### 1.0.1
+- 通知 payload 对齐现役中转侧（token + text 核心字段）
+- 指令服务固定 POST /exec 并统一返回 JSON
+- 指令支持中文别名（状态/磁盘/温度/阵列/重启）
+- 「允许重启的容器名前缀」可在设置页配置，留空即禁用 restart
+- 未配置令牌时指令服务 fail closed
+- 修复版本索引与更新检查的字段名不一致
+
+### 1.0.0
+- 初始版本
+  </CHANGES>
+
+  <!-- ⚠️ 离线安装核心：整个插件打包成单个 txz，落到**闪存**（/boot/config/plugins/）。
+       plugin-manager 开机时校验 MD5 → 文件已存在则 skipping（不联网）→ 但**仍会执行 Run**，
+       由 upgradepkg 本地解包还原 /usr 下的运行时文件。因此开机不再依赖网络。
+
+       为什么必须这么做（2026-10-05 真实故障）：
+       旧版是 13 个 <FILE> 逐个走 <URL> 下载。开机 09:37 网络未稳，
+       WeComHub.page 下载失败 → 整个插件被判失败 → 挪进 plugins-error →
+       服务、开机钩子、通知代理全部消失且不自愈。
+       与依赖相反：其他插件没事是因为它们的包是本地 txz / 本地文件，不联网。
+
+       打包内容见 scripts/build-release.sh（含 dynamix 下的 agents/icons/event 与 rc.d）。
+       用户配置 notifications/agents/&name;.sh **刻意不打包**，避免被解包覆盖。 -->
+    <!-- reinstall 选项不可省略（2026-10-05 实测）：
+       只用 install-new 时，若同名同版本的包登记仍在，upgradepkg 会打印
+       “Skipping package (already installed)” 并**不解包**。
+       此时若 /usr 已被清空（overlay 重启丢失、或人为清理），插件文件就再也回不来。
+       登记通常在 /var/log/packages（tmpfs，重启即失），但同一开机周期内重复安装、
+       或该目录被持久化时，跳过解包会造成「文件全丢却查不出原因」。
+       reinstall 强制同版本也重新解包，堵死这条路径。
+
+       XML 注意：注释正文内不得出现连续双横线，故此处不写命令行选项原样文字。 -->
+  <FILE Name="/boot/config/plugins/&name;/&name;-2.0.0.txz" Run="upgradepkg --install-new --reinstall">
+    <URL>&dlURL;&name;-2.0.0.txz</URL>
+    <MD5>97c9980f4ed7360aa2ae381cfd05f5ff</MD5>
+  </FILE>
+
+  <!-- 安装动作：不依赖 /boot/config/go -->
+  <FILE Run="/bin/bash">
+  <INLINE>
+mkdir -p /usr/local/emhttp/plugins/&name;
+echo "&version;" > /usr/local/emhttp/plugins/&name;/version
+
+# 清理闪存上的旧版本 txz，避免长期累积占空间。
+# 注意时机：必须在本 FILE 的 Run 解包**之后**，否则会误删当前版本。
+ls /boot/config/plugins/&name;/&name;-*.txz 2&gt;/dev/null | grep -v "&name;-&version;.txz" | while read -r old_txz; do
+  rm -f "$old_txz"
+done
+
+# 离线安装兜底：txz 已在闪存上时 plugin-manager 会 skipping 下载，
+# 但仍会执行本 FILE 的 Run=upgradepkg。故此处正常情况下 txz 已被解包。
+# 若因故未解包（例如首次 /usr 已失且 txz 刚落地），这里补一次本地解包。
+if [ ! -f /usr/local/emhttp/plugins/&name;/&name;.page ]; then
+  TXZ="/boot/config/plugins/&name;/&name;-&version;.txz"
+  if [ -f "$TXZ" ]; then
+    upgradepkg --install-new --reinstall "$TXZ" &gt;/dev/null 2&gt;&amp;1 || true
+  fi
+fi
+
+# 通知代理配置文件：不存在则生成；旧版 {0} 格式则用模板重建（含默认变量块，无 {0}）。
+# 已存在则保留用户配置，因为该文件不在 &lt;FILE&gt; 清单中、不会被升级覆盖。
+AGENT_CONF="/boot/config/plugins/dynamix/notifications/agents/&name;.sh"
+AGENT_TPL="/usr/local/emhttp/plugins/&name;/scripts/agent-config-template.sh"
+NEED_INIT=0
+if [ ! -f "$AGENT_CONF" ]; then
+  NEED_INIT=1
+elif grep -q '^{0}$' "$AGENT_CONF" 2&gt;/dev/null; then
+  cp -f "$AGENT_CONF" "$AGENT_CONF.bak-pre106" 2&gt;/dev/null || true
+  NEED_INIT=1
+fi
+if [ "$NEED_INIT" = "1" ] &amp;&amp; [ -f "$AGENT_TPL" ]; then
+  cp -f "$AGENT_TPL" "$AGENT_CONF"
+  chmod 0755 "$AGENT_CONF"
+fi
+
+# 从持久化快照还原用户配置。
+# 场景：agent 文件被 Delete 删掉、或仍是占位默认值，但快照里有真实值。
+# 这样重装/升级后能自动拿回配置，而不是退回占位符。
+SNAP="/boot/config/plugins/&name;/agent-vars.conf"
+if [ -f "$SNAP" ] &amp;&amp; [ -f "$AGENT_TPL" ]; then
+  NEEDS_RESTORE=0
+  if [ ! -f "$AGENT_CONF" ]; then
+    NEEDS_RESTORE=1
+  elif grep -q 'RELAY_HOST="RELAY_HOST"' "$AGENT_CONF" 2&gt;/dev/null; then
+    NEEDS_RESTORE=1
+  fi
+  if [ "$NEEDS_RESTORE" = "1" ]; then
+    python3 - "$SNAP" "$AGENT_TPL" "$AGENT_CONF" &lt;&lt;'PYRESTORE'
+import sys, re
+snap, tpl, out = sys.argv[1:4]
+vals = {}
+for line in open(snap, encoding="utf-8", errors="ignore"):
+    line = line.strip()
+    if line and not line.startswith("#") and "=" in line:
+        k, v = line.split("=", 1)
+        vals[k] = v
+if vals.get("RELAY_HOST", "RELAY_HOST") in ("", "RELAY_HOST"):
+    sys.exit(0)
+if vals.get("RELAY_PUSH_TOKEN", "RELAY_PUSH_TOKEN") in ("", "RELAY_PUSH_TOKEN"):
+    sys.exit(0)
+s = open(tpl, encoding="utf-8").read()
+m = re.search(r"[#]{6,100}(.*?)[#]{6,100}", s, re.S)
+if not m:
+    sys.exit(0)
+out_lines = []
+for line in m.group(1).splitlines():
+    if "=" not in line:
+        continue
+    k = line.split("=", 1)[0].strip()
+    v = vals.get(k)
+    if v is None:
+        v = line.split("=", 1)[1].strip().strip(chr(34))
+    out_lines.append(k + "=" + chr(34) + v + chr(34))
+s = s[:m.start(1)] + "\n" + "\n".join(out_lines) + "\n" + s[m.end(1):]
+open(out, "w", encoding="utf-8").write(s)
+PYRESTORE
+    chmod 0755 "$AGENT_CONF" 2&gt;/dev/null || true
+  fi
+fi
+
+# 迁移：已存在但缺 export 的配置文件（v1.0.9 之前生成的），就地补上 export。
+# 本文件用 exec 调用程序本体，未导出的变量不会传递过去，会导致通知静默失效。
+# 只补 export 行，不动用户的变量值。
+if [ -f "$AGENT_CONF" ] &amp;&amp; ! grep -q '^export RELAY_HOST' "$AGENT_CONF" 2&gt;/dev/null; then
+  cp -f "$AGENT_CONF" "$AGENT_CONF.bak-preexport" 2&gt;/dev/null || true
+  python3 - "$AGENT_CONF" &lt;&lt;'PYMIG'
+import sys, re
+p = sys.argv[1]
+s = open(p, encoding="utf-8", errors="ignore").read()
+if "export RELAY_HOST" in s:
+    sys.exit(0)
+m = re.search(r"[#]{6,100}(.*?)[#]{6,100}", s, re.S)
+if not m:
+    sys.exit(0)
+ins = ("\n"
+       "# Variables must be exported: this file uses exec to call the plugin body,\n"
+       "# and unexported shell variables are not passed through.\n"
+       "export RELAY_HOST RELAY_PORT RELAY_PUSH_TOKEN MIN_IMPORTANCE TITLE MESSAGE\n")
+s = s[:m.end()] + ins + s[m.end():]
+open(p, "w", encoding="utf-8").write(s)
+PYMIG
+  chmod 0755 "$AGENT_CONF" 2&gt;/dev/null || true
+fi
+
+# 迁移：清理旧版写入的兜底文案。
+# 早期版本在 SUBJECT/DESCRIPTION 为空时填入 "Notification" / "No description"，
+# 而这些已解析的兜底值又被写进配置与快照。它们不是用户填的真实值，却会作为显式
+# TITLE/MESSAGE 优先于动态解析，导致每条通知都显示假标题假详情、真实内容被掩盖。
+# 这里把这两个特定值视为“未设置”并清空，让用户重新回到跟随 subject/description。
+for F in "$AGENT_CONF" "/boot/config/plugins/&name;/agent-vars.conf"; do
+  [ -f "$F" ] || continue
+  python3 - "$F" &lt;&lt;'PYFALLBACK'
+import sys, re
+p = sys.argv[1]
+s = open(p, encoding="utf-8", errors="ignore").read()
+if "Notification" not in s and "No description" not in s:
+    sys.exit(0)
+m = re.search(r"[#]{6,100}(.*?)[#]{6,100}", s, re.S)
+quoted = bool(m)
+seg = m.group(1) if m else s
+out, changed = [], False
+for line in seg.splitlines():
+    if "=" not in line:
+        out.append(line)
+        continue
+    k, v = line.split("=", 1)
+    k = k.strip()
+    val = v.strip().strip(chr(34)).strip(chr(39))
+    if k == "TITLE" and val == "Notification":
+        val = ""
+        changed = True
+    elif k == "MESSAGE" and val == "No description":
+        val = ""
+        changed = True
+    out.append(k + "=" + (chr(34) + val + chr(34) if quoted else val))
+if not changed:
+    sys.exit(0)
+new_seg = "\n".join(out)
+if quoted:
+    s = s[:m.start(1)] + "\n" + new_seg + "\n" + s[m.end(1):]
+else:
+    s = new_seg + "\n"
+open(p, "w", encoding="utf-8").write(s)
+print("cleaned legacy fallback in %s" % p)
+PYFALLBACK
+done
+
+# 指令服务开机钩子（若事件目录存在）
+EVENT_DIR="/usr/local/emhttp/plugins/dynamix/event/started"
+if [ -d "$EVENT_DIR" ] &amp;&amp; [ ! -f "$EVENT_DIR/zz-wecomhub" ]; then
+  cp -f "/usr/local/emhttp/plugins/&name;/scripts/event-started.sh" "$EVENT_DIR/zz-wecomhub" 2&gt;/dev/null || true
+  chmod 0755 "$EVENT_DIR/zz-wecomhub" 2&gt;/dev/null || true
+fi
+
+if [ -f /etc/rc.d/rc.&name; ]; then
+  /etc/rc.d/rc.&name; restart &gt;/dev/null 2&gt;&amp;1 &amp;
+fi
+  </INLINE>
+  </FILE>
+
+  <!-- 卸载清理：停止服务并移除部署副本；保留 /boot/config/plugins/&name;/wecom.hub.cfg 用户配置 -->
+  <FILE Run="/bin/bash" Method="remove">
+  <INLINE>
+if [ -x /etc/rc.d/rc.&name; ]; then
+  /etc/rc.d/rc.&name; stop &gt;/dev/null 2&gt;&amp;1
+fi
+rm -f /etc/rc.d/rc.&name;
+rm -f /boot/config/plugins/dynamix/notifications/agents/&name;.sh
+rm -f /boot/config/plugins/dynamix/notifications/agents-disabled/&name;.sh
+rm -f /usr/local/emhttp/plugins/dynamix/agents/&name;.xml
+rm -f /usr/local/emhttp/plugins/dynamix/event/started/zz-wecomhub
+rm -rf /usr/local/emhttp/plugins/&name;
+# 卸载 Slackware 包登记，避免 upgradepkg 认为包仍在、导致重装时跳过解包
+removepkg /boot/config/plugins/&name;/&name;-&version; &gt;/dev/null 2&gt;&amp;1 || true
+rm -f /boot/config/plugins/&name;/&name;-*.txz
+# /boot/config/plugins/&name;/wecom.hub.cfg 保留，避免重装后需要重新填写
+  </INLINE>
+  </FILE>
+</PLUGIN>

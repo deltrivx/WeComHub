@@ -1,13 +1,7 @@
 <?php
 /**
- * WeComHub 设置页面（入口：设置 → 通知）
- *
- * 职责边界（重要）：
- *   - 通知侧配置（中转地址/端口/令牌/最低级别）由 Unraid 官方
- *     「设置 → 通知 → 通知代理 → WeComHub」页面管理，写入 agent 脚本的变量块。
- *   - 本页只管指令侧：是否启用、本地监听端口、允许重启的容器名范围。
- *
- * 这样任何设备/用户安装后都只有一处通知配置，不依赖任何预置值。
+ * WeComHub 设置页面（设置 → 通知 → WeComHub）
+ * 参考 MoviePilot 设计规范：凭据统归一处、连接测试、一键同步菜单、状态灯、最近交互
  */
 $CFG = '/boot/config/plugins/WeComHub/wecom.hub.cfg';
 
@@ -17,50 +11,144 @@ if (is_file($CFG)) {
         $line = trim($line);
         if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) { continue; }
         [$k, $v] = explode('=', $line, 2);
-        $current[$k] = $v;
+        $current[trim($k)] = trim($v);
     }
 }
 $val = fn($k, $d = '') => htmlspecialchars($current[$k] ?? $d);
 $checked = fn($k, $d = 'yes') => (($current[$k] ?? $d) === 'yes') ? ' checked' : '';
 ?>
-<link rel="stylesheet" href="/plugins/WeComHub/assets/WeComHub.css">
+<link rel="stylesheet" href="/plugins/WeComHub/assets/WeComHub.css?v=2.0.0">
 
-<div class="wecomhub">
-  <h2>WeComHub — 企业微信中枢</h2>
-  <p class="wh-desc">
-    本页配置<strong>指令侧</strong>（企业微信发指令给 Unraid）。
-    通知侧的地址、端口与令牌请在
-    <a href="/Settings/NotificationAgents">设置 → 通知 → 通知代理 → WeComHub</a> 中填写。
-  </p>
+<div class="wecomhub-wrap">
+  <div class="wh-header">
+    <div class="wh-title-box">
+      <h2>WeComHub 2.0 企业微信中枢</h2>
+      <span class="wh-subtitle">Unraid 系统通知推送到企微 + 企微双向指令与菜单控制</span>
+    </div>
+    <div class="wh-status-badge" id="wh-service-badge">
+      <span class="wh-dot unknown"></span>
+      <span class="wh-status-text" id="wh-status-text">检测中…</span>
+    </div>
+  </div>
 
   <form id="wh-form" method="POST" action="/plugins/WeComHub/wecom-hub-save.php">
-    <table class="wh-table">
-      <tr>
-        <td>启用指令交互</td>
-        <td><input type="checkbox" name="ENABLE_CMD" value="yes"<?= $checked('ENABLE_CMD') ?>>
-          <small>接收企业微信指令并执行只读查询/容器重启</small></td>
-      </tr>
-      <tr>
-        <td>本地指令端口</td>
-        <td><input type="number" name="LOCAL_CMD_PORT" value="<?= $val('LOCAL_CMD_PORT', '8181') ?>" placeholder="LOCAL_CMD_PORT">
-          <small>本地指令服务监听端口，需与中转服务指向的端口一致</small></td>
-      </tr>
-      <tr>
-        <td>允许重启的容器名范围</td>
-        <td><input type="text" name="RESTART_ALLOW_PREFIX" value="<?= $val('RESTART_ALLOW_PREFIX') ?>" placeholder="* = any container">
-          <small>填 <code>*</code> 允许重启任意容器；填前缀（如 <code>Auto</code>）仅允许该前缀；留空则禁用重启</small></td>
-      </tr>
-    </table>
+    <input type="hidden" name="action" value="save">
 
-    <div class="wh-actions">
-      <button type="submit" class="wh-save">保存</button>
-      <span id="wh-msg"></span>
+    <!-- 1. 企微应用凭据 -->
+    <div class="wh-card">
+      <div class="wh-card-title">企业微信应用凭据</div>
+      <div class="wh-card-desc">集中保存在 <code>/boot/config/plugins/WeComHub/wecom.hub.cfg</code>（权限 0600），出站通知与入站回调共用</div>
+      <table class="wh-table">
+        <tr>
+          <td>企业 ID (CorpID)</td>
+          <td>
+            <input type="text" name="WECOM_CORP_ID" value="<?= $val('WECOM_CORP_ID') ?>" placeholder="ww..." required>
+            <small>企业微信管理后台「我的企业」底部 CorpID</small>
+          </td>
+        </tr>
+        <tr>
+          <td>应用 AgentID</td>
+          <td>
+            <input type="text" name="WECOM_AGENT_ID" value="<?= $val('WECOM_AGENT_ID', '1000007') ?>" placeholder="1000007" required>
+            <small>应用管理中的 AgentId，例如 1000007</small>
+          </td>
+        </tr>
+        <tr>
+          <td>应用 Secret</td>
+          <td>
+            <input type="password" name="WECOM_SECRET" value="<?= $val('WECOM_SECRET') ?>" placeholder="••••••••••••••••" autocomplete="new-password">
+            <small>应用详情页 Secret</small>
+          </td>
+        </tr>
+        <tr>
+          <td>回调 Token</td>
+          <td>
+            <input type="password" name="WECOM_TOKEN" value="<?= $val('WECOM_TOKEN') ?>" placeholder="接收消息服务器配置的 Token" autocomplete="new-password">
+            <small>应用详情「设置 API 接收」中的 Token</small>
+          </td>
+        </tr>
+        <tr>
+          <td>EncodingAESKey</td>
+          <td>
+            <input type="password" name="WECOM_AES_KEY" value="<?= $val('WECOM_AES_KEY') ?>" placeholder="43 位 EncodingAESKey" autocomplete="new-password">
+            <small>应用详情「设置 API 接收」中的 43 位 EncodingAESKey</small>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 2. 网络与中转 -->
+    <div class="wh-card">
+      <div class="wh-card-title">网络与反向代理</div>
+      <div class="wh-card-desc">由于家宽出口 IP 漂移，发信走 VPS 8484 代理直连；回调经 VPS Nginx 8181 透传穿透打回本地</div>
+      <table class="wh-table">
+        <tr>
+          <td>本地服务监听端口</td>
+          <td>
+            <input type="number" name="LOCAL_CMD_PORT" value="<?= $val('LOCAL_CMD_PORT', '8181') ?>" placeholder="8181" required>
+            <small>本地独立服务监听端口（对应 FRP localPort 8181，VPS 远程 10081）</small>
+          </td>
+        </tr>
+        <tr>
+          <td>出口代理 Host</td>
+          <td>
+            <input type="text" name="RELAY_HOST" value="<?= $val('RELAY_HOST', '[IP]') ?>" placeholder="VPS IP 或域名">
+            <small>VPS 反代 IP，出站发信时使用该 IP 规避家宽出口 IP 漂移</small>
+          </td>
+        </tr>
+        <tr>
+          <td>出口代理 Port</td>
+          <td>
+            <input type="number" name="RELAY_PORT" value="<?= $val('RELAY_PORT', '8484') ?>" placeholder="8484">
+            <small>VPS 反代端口（默认 8484）</small>
+          </td>
+        </tr>
+        <tr>
+          <td>互访令牌 (Push Token)</td>
+          <td>
+            <input type="password" name="RELAY_PUSH_TOKEN" value="<?= $val('RELAY_PUSH_TOKEN') ?>" placeholder="RELAY_PUSH_TOKEN">
+            <small>内部 /exec 与 /notify 接口鉴权令牌</small>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 3. 指令与权限 -->
+    <div class="wh-card">
+      <div class="wh-card-title">指令与安全权限</div>
+      <table class="wh-table">
+        <tr>
+          <td>启用指令交互</td>
+          <td>
+            <label class="wh-switch">
+              <input type="checkbox" name="ENABLE_CMD" value="yes"<?= $checked('ENABLE_CMD') ?>>
+              <span>接收企微回调指令并执行查询/重启</span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td>允许重启容器范围</td>
+          <td>
+            <input type="text" name="RESTART_ALLOW_PREFIX" value="<?= $val('RESTART_ALLOW_PREFIX', '*') ?>" placeholder="* = 全部">
+            <small>填 <code>*</code> 允许重启任意容器；填前缀（如 <code>Auto</code>）仅允许匹配前缀；留空完全禁用重启</small>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="wh-actions-bar">
+      <button type="submit" class="wh-btn wh-btn-primary" id="btn-save">保存配置</button>
+      <button type="button" class="wh-btn wh-btn-secondary" id="btn-test">测试发信连接</button>
+      <button type="button" class="wh-btn wh-btn-secondary" id="btn-sync-menu">一键同步企微菜单</button>
+      <span id="wh-action-msg"></span>
     </div>
   </form>
 
-  <p class="wh-note">
-    说明：文档与仓库中的地址、端口、令牌均为占位符，请使用你自己的值。
-  </p>
+  <!-- 4. 最近日志 -->
+  <div class="wh-card wh-log-card">
+    <div class="wh-card-title">最近交互与系统日志</div>
+    <pre id="wh-log-viewer" class="wh-log-viewer">加载日志中…</pre>
+  </div>
 </div>
 
-<script src="/plugins/WeComHub/assets/WeComHub.js"></script>
+<script src="/plugins/WeComHub/assets/WeComHub.js?v=2.0.0"></script>

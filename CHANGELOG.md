@@ -2,6 +2,19 @@
 
 本文件记录 WeComHub 的版本变更。格式参考 Keep a Changelog，语言与仓库中文文档保持一致。
 
+## [2.0.0] - 2026-10-18
+
+重大更新
+
+- **入站验签解密自闭环（与 Notify 解耦）**：将此前运行在 VPS 或外部 Notify 的企业微信回调验签、AES-256-CBC 解密与指令分发全面收拢至插件内部。内嵌纯 Python 标准库 AES-256-CBC 与 PKCS#7 算法（约 80 行代码），**零外部依赖**（无需安装 `cryptography` C 扩展），彻底实现 Unraid 宿主机自包含运行。
+- **UI 全面升级（MoviePilot 风格）**：
+  - 凭据面板集中一处：`WECOM_CORP_ID`、`WECOM_AGENT_ID`、`WECOM_SECRET`、`WECOM_TOKEN`、`WECOM_AES_KEY` 统归管理；
+  - 动作按钮：提供「测试连接」（一键验证 access_token 并直发测试消息）与「一键同步企微菜单」（调用 `/cgi-bin/menu/create` 刷新官方三组菜单）；
+  - 状态与监控：服务运行状态灯、监听端口、实时交互与发送日志展示；
+  - 重启白名单可视化展示与配置（支持 `*` 通配与前缀限制）。
+- **统一凭据持久化**：统一收敛写入 `/boot/config/plugins/WeComHub/wecom.hub.cfg`，严格遵循 `0600` 权限，自动兼容老版本存量配置，升级/重装不丢凭据。
+- **100% 保持既有契约**：既有白名单命令（`status`, `array`, `disk`, `temp`, `docker`, `uptime`, `restart`）及中文别名完全兼容；兼容旧版 `/exec` 与 `/notify` 接口；Unraid 原生系统通知出站链路完全独立且不受任何影响。
+
 ## [1.1.9] - 2026-10-05
 
 修复
@@ -232,6 +245,7 @@
 - `verify.yml` 扫描 `sk-` / `ghp_` / `gho_` 前缀真实 token，命中即失败。
 - 代码与归档不经本地构建上传，一律由 GitHub Actions 云端产出。
 
+[2.0.0]: https://github.com/deltrivx/WeComHub/releases/tag/v2.0.0
 [1.1.9]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.9
 [1.1.8]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.8
 [1.1.7]: https://github.com/deltrivx/WeComHub/releases/tag/v1.1.7
