@@ -603,3 +603,29 @@ class Handler(BaseHTTPRequestHandler):
         # 4. 未知路径
         self._send_json(404, {"ok": False, "err": "not found"})
         return
+
+def main():
+    apply_config()
+    server = None
+    bound_port = None
+    log("Starting WeComHub 2.0 service on port %d" % PORT)
+    while True:
+        apply_config()
+        port = PORT
+        if server is None or port != bound_port:
+            if server is not None:
+                server.server_close()
+                log("端口变更 %s -> %s，已重新监听" % (bound_port, port))
+            try:
+                server = HTTPServer(("[IP]", port), Handler)
+            except OSError as e:
+                log("监听端口 %s 失败: %s" % (port, e))
+                if server is None:
+                    raise
+                continue
+            bound_port = port
+            log("WeComHub 2.0 cmd service listening on :%d" % port)
+        server.handle_request()
+
+if __name__ == "__main__":
+    main()
